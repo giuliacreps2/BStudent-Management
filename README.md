@@ -11,12 +11,8 @@
 - [Architettura](#architettura)
 - [Tecnologie](#tecnologie)
 - [Struttura del Progetto](#struttura-del-progetto)
-- [Installazione](#installazione)
-- [Configurazione](#configurazione)
 - [API Endpoints](#api-endpoints)
 - [Roadmap](#roadmap)
-- [Contribuire](#contribuire)
-- [Licenza](#licenza)
 
 ---
 
@@ -92,7 +88,7 @@ L'obiettivo è offrire un percorso di studio strutturato, progressivo e coinvolg
 | Spring Security | Autenticazione e autorizzazione (JWT) |
 | Spring Data JPA + Specification | Persistenza e query dinamiche |
 | PostgreSQL | Database relazionale |
-| Maven / Gradle | Build e gestione dipendenze |
+| Maven | Build e gestione dipendenze |
 
 ### Frontend
 | Tecnologia | Utilizzo |
@@ -195,12 +191,8 @@ Le seguenti funzionalità sono pianificate per le versioni future della piattafo
 - [Architecture](#architecture)
 - [Technologies](#technologies)
 - [Project Structure](#project-structure)
-- [Installation](#installation)
-- [Configuration](#configuration)
 - [API Endpoints](#api-endpoints-1)
 - [Roadmap](#roadmap-1)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
@@ -276,7 +268,7 @@ The goal is to offer a structured, progressive and engaging study path, with soc
 | Spring Security | Authentication & authorization (JWT) |
 | Spring Data JPA + Specification | Persistence and dynamic queries |
 | PostgreSQL | Relational database |
-| Maven / Gradle | Build and dependency management |
+| Maven | Build and dependency management |
 
 ### Frontend
 | Technology | Usage |
