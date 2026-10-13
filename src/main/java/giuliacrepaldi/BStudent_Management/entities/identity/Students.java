@@ -3,7 +3,7 @@ package giuliacrepaldi.BStudent_Management.entities.identity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,24 +19,25 @@ import java.time.LocalDate;
 public class Students {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long studentId;
 
     @Column(length = 80, unique = true, nullable = false)
     private String username;
 
+    @Builder.Default
     @Column(nullable = false)
-    private LocalDate createdAt = LocalDate.now();
-
-    private LocalDate lastModified;
+    private OffsetDateTime createdAt = OffsetDateTime.now();
+    
+    private OffsetDateTime lastModified;
 
     @ManyToOne
     @JoinColumn(name = "school_id")
-    private Schools schoolId;
+    private Schools school;
 
-    @ManyToOne
-    @JoinColumn(unique = true, nullable = false)
-    private Users userId;
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    private Users user;
 
 
 }

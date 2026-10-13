@@ -2,9 +2,8 @@ package giuliacrepaldi.BStudent_Management.entities.identity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.catalina.User;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,10 +25,11 @@ public class PolicyAcceptances {
     @Column(length = 40, nullable = false)
     private String documentVersion;
 
+    @Builder.Default
     @Column(nullable = false)
-    private LocalDateTime acknowledgedAt = LocalDateTime.now();
+    private OffsetDateTime acknowledgedAt = OffsetDateTime.now();
 
-    @OneToOne
-    @JoinColumn
-    private User userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 }

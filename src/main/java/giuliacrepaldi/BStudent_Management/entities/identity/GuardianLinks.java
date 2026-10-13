@@ -1,11 +1,12 @@
 package giuliacrepaldi.BStudent_Management.entities.identity;
 
 import giuliacrepaldi.BStudent_Management.enums.identity.Relationship;
-import giuliacrepaldi.BStudent_Management.enums.identity.Status;
+import giuliacrepaldi.BStudent_Management.enums.identity.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.time.OffsetDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,30 +21,46 @@ import java.time.LocalDateTime;
 })
 public class GuardianLinks {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long guardianUserId;
+    // Chiave composta: (guardian_user_id, student_id)
+    @EmbeddedId
+    private GuardianLinkId id;
 
+    // Il genitore: riempie guardian_user_id della chiave
+    @MapsId("guardianUserId")
+    @ManyToOne
+    @JoinColumn(name = "guardian_user_id")
+    private Users guardian;
+
+    // Lo studente: riempie student_id della chiave
+    @MapsId("studentId")
+    @ManyToOne
+    @JoinColumn(name = "student_id")
+    private Students student;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Relationship relationship;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.PENDING;
+    private VerificationStatus verificationStatus = VerificationStatus.pending;
 
-    private LocalDateTime verifiedAt;
+    private OffsetDateTime verifiedAt;
 
+    @Builder.Default
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    @OneToOne
-    @JoinColumn(name = "student_Id", nullable = false)
-    private Students studentId;
-
-    @ManyToOne
-    @JoinColumn(unique = true, nullable = false)
-    private Users userId;
-
+    @Embeddable
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode
+    public static class GuardianLinkId implements Serializable {
+        private Long guardianUserId;
+        private Long studentId;
+    }
 
 }

@@ -4,8 +4,10 @@ import giuliacrepaldi.BStudent_Management.enums.identity.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,24 +25,38 @@ public class Users {
     private long userId;
     @Column(unique = true, nullable = false)
     private String emailNormalized;
+
+    @ToString.Exclude
     @Column(nullable = false)
     private String passwordHash;
+
     @Column(length = 100)
     private String firstName;
     @Column(length = 100)
     private String lastName;
-    private Date birthDate;
+    private LocalDate birthDate;
     @Column(length = 40)
     private String phoneNumber;
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Status status = Status.valueOf("PENDING_VERIFICATION");
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.valueOf("pending_verification");
+
+    @Builder.Default
+    @Column(nullable = false)
+    private OffsetDateTime createdAt = OffsetDateTime.now();
+    @Builder.Default
     @Column
-    private LocalDateTime updatedAt = LocalDateTime.now();
-    private LocalDateTime deletedAt;
-    private LocalDateTime emailVerifiedAt;
+    private OffsetDateTime updatedAt = OffsetDateTime.now();
+    private OffsetDateTime deletedAt;
+    private OffsetDateTime emailVerifiedAt;
+
+    @ManyToMany
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+
+    @ToString.Exclude
+    @Builder.Default
+    private Set<Roles> roles = new HashSet<>();
 
 }

@@ -3,7 +3,7 @@ package giuliacrepaldi.BStudent_Management.entities.identity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 @Entity
 @Table(indexes = {
         @Index(name = "idx_auth_tokens_user", columnList = "user_id"),
-        @Index(name = "idx_auth_tokens_expiry", columnList = "expires_At")
+        @Index(name = "idx_auth_tokens_expiry", columnList = "expires_at")
 })
 public class AuthTokens {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long authTokenId;
+    private long tokenId;
 
     @Column(unique = true, nullable = false)
     private String tokenHash;
@@ -30,15 +30,18 @@ public class AuthTokens {
     private String purpose;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
-    private LocalDateTime consumedAt;
-    private LocalDateTime revokedAt;
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private OffsetDateTime expiresAt;
 
-    @OneToOne
+    private OffsetDateTime consumedAt;
+    private OffsetDateTime revokedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private OffsetDateTime createdAt = OffsetDateTime.now();
+
+    @ManyToOne
     @JoinColumn(name = "user_id")
-    private Users userId;
+    private Users user;
 
     @PrePersist
     @PreUpdate
