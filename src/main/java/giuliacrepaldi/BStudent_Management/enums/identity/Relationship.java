@@ -8,11 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public enum Relationship {
-    GENITORE("Genitore"),
-    TUTORELEGALE("Tutore Legale"),
-    AFFIDATARIO("Affidatario"),
-    PARENTE("Altro Parente (Zio/Nonno)"),
-    ALTRO("Altro / Nessuna relazione formale");
+    parents("Genitore"),
+    legal_guardian("Tutore Legale"),
+    custodian("Affidatario"),
+    relative("Altro Parente (Zio/Nonno)"),
+    other("Altro / Nessuna relazione formale");
 
 
     private String description;

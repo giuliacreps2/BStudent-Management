@@ -28,8 +28,8 @@ public class Students {
     @Builder.Default
     @Column(nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
-    
-    private OffsetDateTime lastModified;
+
+    private OffsetDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "school_id")

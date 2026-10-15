@@ -38,9 +38,10 @@ public class Users {
     @Column(length = 40)
     private String phoneNumber;
 
+    @Builder.Default
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status status = Status.valueOf("pending_verification");
+    private Status status = Status.pending_verification;
 
     @Builder.Default
     @Column(nullable = false)
