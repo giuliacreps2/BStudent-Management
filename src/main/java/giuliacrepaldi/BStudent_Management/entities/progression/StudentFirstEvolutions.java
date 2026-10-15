@@ -1,4 +1,4 @@
-package giuliacrepaldi.BStudent_Management.entities.skills;
+package giuliacrepaldi.BStudent_Management.entities.progression;
 
 import giuliacrepaldi.BStudent_Management.entities.catalog.Courses;
 import giuliacrepaldi.BStudent_Management.entities.identity.Students;

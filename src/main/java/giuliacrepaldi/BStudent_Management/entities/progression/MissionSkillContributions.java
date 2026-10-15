@@ -1,8 +1,9 @@
-package giuliacrepaldi.BStudent_Management.entities.skills;
+package giuliacrepaldi.BStudent_Management.entities.progression;
 
 import giuliacrepaldi.BStudent_Management.entities.attempts.MissionAttempts;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Missions;
 import giuliacrepaldi.BStudent_Management.entities.identity.Students;
+import giuliacrepaldi.BStudent_Management.entities.skills.Skills;
 import jakarta.persistence.*;
 import lombok.*;
 
