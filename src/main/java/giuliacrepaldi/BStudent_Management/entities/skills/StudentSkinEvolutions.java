@@ -3,6 +3,7 @@ package giuliacrepaldi.BStudent_Management.entities.skills;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 
 @AllArgsConstructor
@@ -21,20 +22,39 @@ import java.time.OffsetDateTime;
 )
 public class StudentSkinEvolutions {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "student_skin_id")
-    private Long studentSkinEvolutionsId;
+    // Chiave composta: (student_skin_id, evolution_id)
+    @EmbeddedId
+    private StudentSkinId id;
 
     @Builder.Default
     @Column(nullable = false)
     private OffsetDateTime unlockedAt = OffsetDateTime.now();
 
-    @ManyToOne
+    // L'evoluzione della skin
+    @MapsId("evolutionId")
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evolution_id", nullable = false)
     private SkinEvolutions skinEvolution;
 
-    @ManyToOne
+    // La skin
+    @MapsId("studentSkinId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skin_id", nullable = false)
+    private StudentSkins studentSkin;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skin_id", nullable = false)
     private Skins skin;
+
+    @Embeddable
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @EqualsAndHashCode
+    public static class StudentSkinId implements Serializable {
+        private Long studentSkinId;
+        private Long evolutionId;
+
+    }
 }

@@ -36,7 +36,7 @@ public class GuardianLinks {
     @ManyToOne
     @JoinColumn(name = "student_id")
     private Students student;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Relationship relationship;
@@ -46,6 +46,7 @@ public class GuardianLinks {
     @Column(nullable = false)
     private VerificationStatus verificationStatus = VerificationStatus.pending;
 
+    @Builder.Default
     private OffsetDateTime verifiedAt;
 
     @Builder.Default
