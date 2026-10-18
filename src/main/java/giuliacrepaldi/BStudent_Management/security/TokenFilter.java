@@ -41,12 +41,6 @@ public class TokenFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String accessToken = extractTokenFromCookies(request);
 
         if (accessToken == null || accessToken.isEmpty()
@@ -67,12 +61,11 @@ public class TokenFilter extends OncePerRequestFilter {
 
             Authentication authenticationToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            log.error("TOKEN OK - utente autenticato: {}", user.getEmailNormalized());
+            log.debug("Token valido - utente autenticato: {}", userId);
         } catch (Exception e) {
             // Token non valido/scaduto/utente non trovato: procedi come richiesta anonima.
             // Sarà Spring Security (o il controller) a rispondere 401/403 se la rotta è protetta.
             log.debug("Token non valido per {}: {}", request.getServletPath(), e.getMessage());
-            log.error("TOKEN FALLITO per {}: {}", request.getServletPath(), e.getMessage(), e);
             SecurityContextHolder.clearContext();
         }
 

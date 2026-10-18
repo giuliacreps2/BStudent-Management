@@ -1,6 +1,8 @@
 package giuliacrepaldi.BStudent_Management.security;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,7 +14,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import tools.jackson.core.filter.TokenFilter;
 
 import java.util.List;
 
@@ -21,9 +22,20 @@ import java.util.List;
 public class SecurityConfig {
 
     private final TokenFilter tokenFilter;
+    private final List<String> allowedOrigins;
 
-    public SecurityConfig(TokenFilter tokenFilter) {
+    public SecurityConfig(TokenFilter tokenFilter, @Value("${cors.allowed-origins}") List<String> allowedOrigins) {
         this.tokenFilter = tokenFilter;
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    // TokenFilter è un @Component: senza questo bean Spring Boot lo registrerebbe anche come filtro
+    // del servlet container, fuori dalla security chain
+    @Bean
+    public FilterRegistrationBean<TokenFilter> tokenFilterRegistration(TokenFilter tokenFilter) {
+        FilterRegistrationBean<TokenFilter> registration = new FilterRegistrationBean<>(tokenFilter);
+        registration.setEnabled(false);
+        return registration;
     }
 
     @Bean
@@ -61,7 +73,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:{PORT}"));
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);

@@ -7,36 +7,48 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 
 @Component
 public class TokenTools {
 
-    private final String secret;
+    private static final Duration TOKEN_DURATION = Duration.ofDays(7);
+
+    private final SecretKey key;
 
     public TokenTools(@Value("${jwt.secret}") String secret) {
-        this.secret = secret;
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     //TO GENERATE TOKEN
     public String generateToken(User user) {
+        Instant now = Instant.now();
         return Jwts.builder()
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(TOKEN_DURATION)))
                 .subject(String.valueOf(user.getUserId()))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                .signWith(key)
                 .compact();
     }
 
     //TO READ TOKEN with ID
     public Long extractUserId(String token) {
         try {
-            String subject = Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secret.getBytes())).build().parseSignedClaims(token)
-                    .getPayload().getSubject();
-            return Long.valueOf(Long.toString(Long.parseLong(subject)));
+            String subject = Jwts.parser().verifyWith(key).build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
+            return Long.parseLong(subject);
         } catch (Exception e) {
             throw new UnauthorizedException("Invalid or expired token");
         }
     }
 
+    public Duration getTokenDuration() {
+        return TOKEN_DURATION;
+    }
 }

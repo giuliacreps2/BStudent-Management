@@ -1,16 +1,17 @@
 package giuliacrepaldi.BStudent_Management.exceptions;
 
 import giuliacrepaldi.BStudent_Management.payloads.ErrorsDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
 
-@RestController
+@Slf4j
+@RestControllerAdvice
 public class ErrorsHandler {
 
     //400
@@ -48,16 +49,11 @@ public class ErrorsHandler {
         return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
     }
 
-    //500
+    //500: il dettaglio resta nei log, al client un messaggio generico
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorsDTO handleException(Exception ex) {
-        return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGenericEx(Exception ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ErrorsDTO handleGenericEx(Exception ex) {
+        log.error("Errore non gestito", ex);
+        return new ErrorsDTO("Internal server error", OffsetDateTime.now());
     }
 }
-
