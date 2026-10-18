@@ -10,7 +10,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -67,9 +66,8 @@ public class ExerciseAssessment {
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal passingThreshold;
 
-    // Nel DB attuale e' una colonna generata: GENERATED ALWAYS AS (percentage >= passing_threshold) STORED
-    @Generated
-    @Column(insertable = false, updatable = false)
+    // Automatico: deve valere percentage >= passing_threshold (chk_exercise_assessments_passed).
+    // Docente (e in futuro AI): valorizzato liberamente
     private Boolean passed;
 
     @NotBlank
