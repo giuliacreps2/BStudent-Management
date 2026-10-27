@@ -1,9 +1,7 @@
 package giuliacrepaldi.BStudent_Management.security;
 
-import giuliacrepaldi.BStudent_Management.entities.identity.Role;
 import giuliacrepaldi.BStudent_Management.entities.identity.User;
-import giuliacrepaldi.BStudent_Management.services.identity.RolesService;
-import giuliacrepaldi.BStudent_Management.services.identity.UsersService;
+import giuliacrepaldi.BStudent_Management.services.identity.interfaces.IUsersService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -29,13 +27,11 @@ public class TokenFilter extends OncePerRequestFilter {
     private static final String COOKIE_NAME = "accessToken";
 
     private final TokenTools tokenTools;
-    private final UsersService usersService;
-    private final RolesService rolesService;
+    private final IUsersService usersService;
 
-    public TokenFilter(TokenTools tokenTools, UsersService usersService, RolesService rolesService) {
+    public TokenFilter(TokenTools tokenTools, IUsersService usersService) {
         this.tokenTools = tokenTools;
         this.usersService = usersService;
-        this.rolesService = rolesService;
     }
 
 
@@ -51,10 +47,10 @@ public class TokenFilter extends OncePerRequestFilter {
 
         try {
             Long userId = tokenTools.extractUserId(accessToken);
-            User user = usersService.findById(userId);
+            // Utente con ruoli già caricati; inesistente, cancellato o sospeso -> eccezione -> anonimo
+            User user = usersService.findForAuthentication(userId);
 
-            List<Role> listRoles = rolesService.findByUserId(userId);
-            List<SimpleGrantedAuthority> authorities = listRoles
+            List<SimpleGrantedAuthority> authorities = user.getRoles()
                     .stream()
                     .map(role -> new SimpleGrantedAuthority(role.getCode()))
                     .toList();

@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PolicyAcceptancesRepository extends JpaRepository<PolicyAcceptance, Long> {
+
+    boolean existsByUserUserIdAndDocumentCodeAndDocumentVersion(Long userId, String documentCode, String documentVersion);
 }

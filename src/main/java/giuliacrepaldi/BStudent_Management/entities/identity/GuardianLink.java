@@ -4,6 +4,7 @@ import giuliacrepaldi.BStudent_Management.enums.identity.Relationship;
 import giuliacrepaldi.BStudent_Management.enums.identity.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
@@ -20,6 +21,9 @@ import java.time.OffsetDateTime;
 @Table(name = "guardian_links", indexes = {
         @Index(name = "idx_guardian_links_student", columnList = "student_id")
 })
+// Prova del consenso (GDPR art. 7.1): un legame verificato dice quando e su quale versione
+@Check(name = "chk_guardian_links_consent",
+        constraints = "verification_status <> 'verified' OR (verified_at IS NOT NULL AND consent_document_version IS NOT NULL)")
 public class GuardianLink {
 
     // Chiave composta: (guardian_user_id, student_id)
@@ -51,6 +55,10 @@ public class GuardianLink {
     private VerificationStatus verificationStatus = VerificationStatus.pending;
 
     private OffsetDateTime verifiedAt;
+
+    // Versione dell'informativa su cui il genitore/tutore ha dato il consenso
+    @Column(length = 40)
+    private String consentDocumentVersion;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

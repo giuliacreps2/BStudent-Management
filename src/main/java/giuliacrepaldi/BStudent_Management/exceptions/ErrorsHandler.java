@@ -3,12 +3,15 @@ package giuliacrepaldi.BStudent_Management.exceptions;
 import giuliacrepaldi.BStudent_Management.payloads.ErrorsDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -26,6 +29,23 @@ public class ErrorsHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorsDTO handleValidationErrorsEx(ValidationException ex) {
         return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
+    }
+
+    //400: errori di @Valid sui body, un messaggio per campo
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorsDTO handleMethodArgumentNotValidEx(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return new ErrorsDTO(message, OffsetDateTime.now());
+    }
+
+    //400: JSON malformato o tipi non convertibili (es. data o enum non validi)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorsDTO handleNotReadableEx(HttpMessageNotReadableException ex) {
+        return new ErrorsDTO("Richiesta non leggibile", OffsetDateTime.now());
     }
 
     //401

@@ -60,25 +60,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/import/**").hasAuthority("ADMIN")
                 .requestMatchers("/roles/**").hasAuthority("ADMIN")
-                .requestMatchers("/auth/register/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                .requestMatchers("/auth/me", "/auth/me/**").authenticated()
                 .requestMatchers("/auth/**").permitAll()
                 .anyRequest().authenticated()
         );
 
         return httpSecurity.build();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChainLogout(HttpSecurity http) throws Exception {
-        http
-                .logout(logout -> logout
-                        .logoutUrl("/logout") // Endpoint per il logout (default /logout)
-                        .logoutSuccessUrl("/login?logout") // Pagina di reindirizzamento post-logout
-                        .invalidateHttpSession(true) // Invalida la sessione
-                        .deleteCookies("JSESSIONID") // Cancella i cookie di sessione
-                );
-        return http.build();
     }
 
     @Bean

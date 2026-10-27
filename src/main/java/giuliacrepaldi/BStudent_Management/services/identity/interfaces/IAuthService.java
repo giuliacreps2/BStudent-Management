@@ -1,45 +1,36 @@
 package giuliacrepaldi.BStudent_Management.services.identity.interfaces;
 
-import giuliacrepaldi.BStudent_Management.entities.identity.Role;
-import giuliacrepaldi.BStudent_Management.entities.identity.User;
+import giuliacrepaldi.BStudent_Management.payloads.identity.AuthResult;
 import giuliacrepaldi.BStudent_Management.payloads.identity.LoggedUserDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.LoginDTO;
-import giuliacrepaldi.BStudent_Management.payloads.identity.LoginRespDTO;
-import giuliacrepaldi.BStudent_Management.payloads.identity.RegisterAccountUserDTO;
-
-import java.util.List;
 
 /**
- * Registrazione, login, logout e utente corrente (blueprint §4).
- * Emette il JWT e lo consegna tramite cookie httpOnly (CookieUtils).
- * Lo stato iniziale dell'utente è pending_verification.
+ * Login locale, utente corrente, password e verifica email (blueprint §4).
+ * Il JWT viene consegnato dal controller tramite cookie httpOnly (CookieUtils), mai nel body.
+ * La registrazione e il consenso del genitore/tutore sono in IRegistrationService.
  */
 public interface IAuthService {
 
-    //REGISTRAZIONE
-
-    String registerNewUserAccount(RegisterAccountUserDTO body);
-
-    User verifyNewUserAccount(String token);
-
-
     //LOGIN
+    // Messaggio unico per email inesistente, password errata, account sospeso o senza password locale
+    AuthResult login(LoginDTO body);
 
-    LoginRespDTO login(LoginDTO body);
+    LoggedUserDTO getCurrentUser(Long userId);
 
-    //metodi per individuare l'utente e il ruolo che svolge, da definire se interessano all'applicazione
-    LoggedUserDTO getCurrentUser(User user);
+    //PASSWORD
+    // Per gli account senza password locale (solo Google) si usa il flusso di reset
+    void changePassword(Long userId, String currentPassword, String newPassword);
 
-    LoggedUserDTO buildLoggedUserDTO(User user, List<Role> roles);
-
-
-    //RESET PASSWORD
-
+    // Risposta identica che l'email esista o no; vale anche per impostare la prima password locale
     void requestPasswordReset(String email);
 
     void resetPassword(String token, String newPassword);
 
+    //VERIFICA EMAIL (es. studente sotto i 14 anni, il cui link di consenso è andato al genitore)
+    void requestEmailVerification(Long userId);
+
+    void verifyEmail(String token);
 
     //LOGOUT
-    //metodo inserito in Security Config da verificare e controllare
+    //stateless: l'endpoint /auth/logout risponde con CookieUtils.clearAccessTokenCookie(), nessun metodo di service
 }

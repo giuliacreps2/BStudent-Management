@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.identity;
 
+import giuliacrepaldi.BStudent_Management.enums.identity.TokenPurpose;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,9 +32,10 @@ public class AuthToken {
     @Column(unique = true, nullable = false, columnDefinition = "TEXT")
     private String tokenHash;
 
-    @NotBlank
+    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(length = 40, nullable = false)
-    private String purpose;
+    private TokenPurpose purpose;
 
     @NotNull
     @Column(nullable = false, updatable = false)
