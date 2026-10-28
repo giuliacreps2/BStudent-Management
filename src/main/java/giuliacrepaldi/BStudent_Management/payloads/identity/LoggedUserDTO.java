@@ -12,6 +12,8 @@ public record LoggedUserDTO(
         boolean emailVerified,
         // false per gli account solo Google: il frontend propone "imposta una password"
         boolean hasLocalPassword,
+        // Identità Google collegata: la pagina Sicurezza del frontend mostra "Collegato"
+        boolean googleLinked,
         Long studentId,
         String username) {
 }

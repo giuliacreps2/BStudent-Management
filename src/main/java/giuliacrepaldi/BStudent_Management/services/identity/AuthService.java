@@ -4,6 +4,7 @@ import giuliacrepaldi.BStudent_Management.entities.identity.AuthToken;
 import giuliacrepaldi.BStudent_Management.entities.identity.Role;
 import giuliacrepaldi.BStudent_Management.entities.identity.Student;
 import giuliacrepaldi.BStudent_Management.entities.identity.User;
+import giuliacrepaldi.BStudent_Management.enums.identity.AuthProvider;
 import giuliacrepaldi.BStudent_Management.enums.identity.Status;
 import giuliacrepaldi.BStudent_Management.enums.identity.TokenPurpose;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
@@ -14,6 +15,7 @@ import giuliacrepaldi.BStudent_Management.payloads.identity.LoggedUserDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.LoginDTO;
 import giuliacrepaldi.BStudent_Management.repositories.identity.AuthTokensRepository;
 import giuliacrepaldi.BStudent_Management.repositories.identity.StudentsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.identity.UserIdentitiesRepository;
 import giuliacrepaldi.BStudent_Management.repositories.identity.UsersRepository;
 import giuliacrepaldi.BStudent_Management.security.OpaqueTokens;
 import giuliacrepaldi.BStudent_Management.security.TokenTools;
@@ -45,6 +47,7 @@ public class AuthService implements IAuthService {
     private final UsersRepository usersRepository;
     private final StudentsRepository studentsRepository;
     private final AuthTokensRepository authTokensRepository;
+    private final UserIdentitiesRepository userIdentitiesRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenTools tokenTools;
     private final ApplicationEventPublisher eventPublisher;
@@ -60,6 +63,7 @@ public class AuthService implements IAuthService {
     public AuthService(UsersRepository usersRepository,
                        StudentsRepository studentsRepository,
                        AuthTokensRepository authTokensRepository,
+                       UserIdentitiesRepository userIdentitiesRepository,
                        PasswordEncoder passwordEncoder,
                        TokenTools tokenTools,
                        ApplicationEventPublisher eventPublisher,
@@ -69,6 +73,7 @@ public class AuthService implements IAuthService {
         this.usersRepository = usersRepository;
         this.studentsRepository = studentsRepository;
         this.authTokensRepository = authTokensRepository;
+        this.userIdentitiesRepository = userIdentitiesRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenTools = tokenTools;
         this.eventPublisher = eventPublisher;
@@ -238,6 +243,7 @@ public class AuthService implements IAuthService {
                 roles,
                 user.getEmailVerifiedAt() != null,
                 user.getPasswordHash() != null,
+                userIdentitiesRepository.existsByUserUserIdAndProvider(user.getUserId(), AuthProvider.google),
                 student != null ? student.getStudentId() : null,
                 student != null ? student.getUsername() : null);
     }

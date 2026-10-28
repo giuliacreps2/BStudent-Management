@@ -57,7 +57,8 @@ public class GoogleLoginSuccessHandler implements AuthenticationSuccessHandler {
                 case GoogleLoginOutcome.LoggedIn(var auth) -> {
                     response.addHeader(HttpHeaders.SET_COOKIE, cookieUtils
                             .createAccessTokenCookie(auth.accessToken(), tokenTools.getTokenDuration()).toString());
-                    yield frontendUrl + "/";
+                    // Stessa destinazione del login con password (HOME_AFTER_LOGIN nel frontend)
+                    yield frontendUrl + "/my/dashboard";
                 }
                 case GoogleLoginOutcome.OnboardingRequired(var onboardingToken) -> {
                     response.addHeader(HttpHeaders.SET_COOKIE, cookieUtils
