@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record GuardianConsentDTO(
+        // Token ricevuto via email: nel body e non nell'URL
+        @NotBlank String token,
         @NotNull Relationship relationship,
         @Size(max = 100) String firstName,
         @Size(max = 100) String lastName,

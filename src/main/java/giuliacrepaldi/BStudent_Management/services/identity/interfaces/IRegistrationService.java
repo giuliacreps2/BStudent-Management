@@ -1,9 +1,13 @@
 package giuliacrepaldi.BStudent_Management.services.identity.interfaces;
 
 import giuliacrepaldi.BStudent_Management.entities.identity.User;
+import giuliacrepaldi.BStudent_Management.payloads.identity.GoogleProfile;
+import giuliacrepaldi.BStudent_Management.payloads.identity.GoogleSignupDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.GuardianConsentDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.RegisterAccountUserDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.RegistrationPreviewDTO;
+
+import java.util.Optional;
 
 /**
  * Registrazione degli studenti con conferma email o consenso del genitore/tutore (blueprint §4).
@@ -16,6 +20,10 @@ public interface IRegistrationService {
 
     // Risposta identica che l'email sia già registrata o no: non rivela chi ha un account
     void register(RegisterAccountUserDTO body);
+
+    // Registrazione con Google (profilo già verificato da Google): dai 14 anni l'account nasce subito
+    // e viene restituito; sotto i 14 anni si apre il flusso di consenso del genitore e il risultato è vuoto
+    Optional<User> registerWithGoogle(GoogleProfile profile, GoogleSignupDTO body);
 
     // Dati mostrati dalla pagina aperta dal link (conferma o consenso)
     RegistrationPreviewDTO preview(String token);

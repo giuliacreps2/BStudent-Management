@@ -1,12 +1,15 @@
 package giuliacrepaldi.BStudent_Management.services.identity;
 
 import giuliacrepaldi.BStudent_Management.entities.identity.*;
+import giuliacrepaldi.BStudent_Management.enums.identity.AuthProvider;
 import giuliacrepaldi.BStudent_Management.enums.identity.RegistrationRequestStatus;
 import giuliacrepaldi.BStudent_Management.enums.identity.Status;
 import giuliacrepaldi.BStudent_Management.enums.identity.VerificationStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.exceptions.UnauthorizedException;
+import giuliacrepaldi.BStudent_Management.payloads.identity.GoogleProfile;
+import giuliacrepaldi.BStudent_Management.payloads.identity.GoogleSignupDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.GuardianConsentDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.RegisterAccountUserDTO;
 import giuliacrepaldi.BStudent_Management.payloads.identity.RegistrationPreviewDTO;
@@ -28,6 +31,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.Period;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -47,6 +51,7 @@ public class RegistrationService implements IRegistrationService {
     private final SchoolsRepository schoolsRepository;
     private final GuardianLinksRepository guardianLinksRepository;
     private final PolicyAcceptancesRepository policyAcceptancesRepository;
+    private final UserIdentitiesRepository userIdentitiesRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -63,6 +68,7 @@ public class RegistrationService implements IRegistrationService {
                                SchoolsRepository schoolsRepository,
                                GuardianLinksRepository guardianLinksRepository,
                                PolicyAcceptancesRepository policyAcceptancesRepository,
+                               UserIdentitiesRepository userIdentitiesRepository,
                                PasswordEncoder passwordEncoder,
                                ApplicationEventPublisher eventPublisher,
                                @Value("${registration.digital-consent-age}") int digitalConsentAge,
@@ -77,6 +83,7 @@ public class RegistrationService implements IRegistrationService {
         this.schoolsRepository = schoolsRepository;
         this.guardianLinksRepository = guardianLinksRepository;
         this.policyAcceptancesRepository = policyAcceptancesRepository;
+        this.userIdentitiesRepository = userIdentitiesRepository;
         this.passwordEncoder = passwordEncoder;
         this.eventPublisher = eventPublisher;
         this.digitalConsentAge = digitalConsentAge;
@@ -113,62 +120,76 @@ public class RegistrationService implements IRegistrationService {
     @Override
     @Transactional
     public void register(RegisterAccountUserDTO body) {
-        requireCurrentPolicy(body.policyVersion());
-
-        String email = Emails.normalize(body.email());
-        String username = body.username().trim();
-        // L'età la calcola il server: il client non decide se serve il genitore
-        boolean requiresGuardianConsent = ageOf(body.birthDate()) < digitalConsentAge;
-        // Dai 14 anni il consenso è autonomo: l'email del genitore non viene conservata
-        String guardianEmail = requiresGuardianConsent ? Emails.normalize(body.guardianEmail()) : null;
-
-        if (requiresGuardianConsent && (guardianEmail == null || guardianEmail.isEmpty())) {
-            throw new BadRequestException("Per gli studenti sotto i " + digitalConsentAge
-                    + " anni è obbligatoria l'email del genitore o tutore");
-        }
-        if (email.equals(guardianEmail)) {
-            throw new BadRequestException("L'email del genitore o tutore deve essere diversa da quella dello studente");
-        }
-        if (isUsernameTaken(username, email)) {
-            throw new BadRequestException("Username già in uso");
-        }
-        if (usersRepository.existsByEmailIncludingDeleted(email)) {
+        NewRegistration registration = validateNewRegistration(body.email(), body.username(), body.birthDate(),
+                body.guardianEmail(), body.policyVersion());
+        if (usersRepository.existsByEmailIncludingDeleted(registration.email())) {
             log.info("Registrazione ignorata: email già associata a un account");
             return;
         }
 
         //TODO VERIFICARE CHE LA SCUOLA NON SIA BLOCCANTE NELLA REGISTRAZIONE
         // Una nuova registrazione con la stessa email sostituisce quella ancora aperta
-        registrationRequestsRepository.findByEmailNormalizedAndStatus(email, RegistrationRequestStatus.pending)
-                .ifPresent(previous -> {
-                    registrationRequestsRepository.delete(previous);
-                    registrationRequestsRepository.flush();
-                });
+        replacePendingRequests(registration.email(), null);
 
-        School school = body.schoolId() == null ? null
-                : schoolsRepository.findById(body.schoolId())
-                .orElseThrow(() -> new NotFoundException(body.schoolId()));
-
-        String rawToken = OpaqueTokens.generate();
-        OffsetDateTime now = OffsetDateTime.now();
         RegistrationRequest request = RegistrationRequest.builder()
-                .emailNormalized(email)
+                .emailNormalized(registration.email())
                 .passwordHash(passwordEncoder.encode(body.password()))
                 .firstName(trimToNull(body.firstName()))
                 .lastName(trimToNull(body.lastName()))
                 .birthDate(body.birthDate())
-                .username(username)
-                .school(school)
-                .requiresGuardianConsent(requiresGuardianConsent)
-                .guardianEmailNormalized(guardianEmail)
+                .username(registration.username())
+                .school(resolveSchool(body.schoolId()))
+                .requiresGuardianConsent(registration.requiresGuardianConsent())
+                .guardianEmailNormalized(registration.guardianEmail())
                 .policyVersion(body.policyVersion())
-                .tokenHash(OpaqueTokens.hash(rawToken))
-                .expiresAt(now.plus(requestTtl))
-                .lastSentAt(now)
                 .build();
-        registrationRequestsRepository.save(request);
+        savePendingRequest(request);
+    }
 
-        publishConfirmation(request, rawToken);
+    //REGISTRAZIONE CON GOOGLE (secondo passaggio, dopo il ritorno da Google)
+    @Override
+    @Transactional
+    public Optional<User> registerWithGoogle(GoogleProfile profile, GoogleSignupDTO body) {
+        NewRegistration registration = validateNewRegistration(profile.email(), body.username(), body.birthDate(),
+                body.guardianEmail(), body.policyVersion());
+        // Qui non serve nascondere l'esistenza dell'account: chi arriva ha appena dimostrato
+        // a Google di possedere questa email
+        if (usersRepository.existsByEmailIncludingDeleted(registration.email())
+                || userIdentitiesRepository.findByProviderAndProviderSubject(AuthProvider.google, profile.subject())
+                .isPresent()) {
+            throw new BadRequestException("Esiste già un account per questo profilo Google: accedi con Google");
+        }
+
+        replacePendingRequests(registration.email(), profile.subject());
+
+        // Email e nome arrivano da Google; nessuna password locale
+        RegistrationRequest request = RegistrationRequest.builder()
+                .emailNormalized(registration.email())
+                .googleSubject(profile.subject())
+                .firstName(trimToNull(profile.givenName()))
+                .lastName(trimToNull(profile.familyName()))
+                .birthDate(body.birthDate())
+                .username(registration.username())
+                .school(resolveSchool(body.schoolId()))
+                .requiresGuardianConsent(registration.requiresGuardianConsent())
+                .guardianEmailNormalized(registration.guardianEmail())
+                .policyVersion(body.policyVersion())
+                .build();
+
+        if (registration.requiresGuardianConsent()) {
+            // Sotto i 14 anni: stesso flusso di consenso della registrazione classica
+            savePendingRequest(request);
+            return Optional.empty();
+        }
+
+        // Dai 14 anni: Google ha già verificato l'email, l'account nasce subito senza richiesta persistita
+        Student student = createStudentAccount(request, OffsetDateTime.now());
+        User studentUser = student.getUser();
+        recordPolicyAcceptance(studentUser, request.getPolicyVersion());
+        eventPublisher.publishEvent(new RegistrationCompleted(studentUser.getEmailNormalized(),
+                studentNameOf(request), null));
+        log.info("Registrazione con Google completata: utente {}", studentUser.getUserId());
+        return Optional.of(studentUser);
     }
 
     @Override
@@ -226,7 +247,8 @@ public class RegistrationService implements IRegistrationService {
         User guardian = resolveGuardian(request, body, currentUser, now);
         recordPolicyAcceptance(guardian, body.policyVersion());
 
-        // L'email dello studente non è ancora verificata: il link è arrivato al genitore
+        // L'email dello studente resta da verificare (il link è arrivato al genitore),
+        // salvo registrazione con Google, che l'ha già verificata
         Student student = createStudentAccount(request, now);
 
         GuardianLink link = GuardianLink.builder()
@@ -332,13 +354,19 @@ public class RegistrationService implements IRegistrationService {
         return usersRepository.save(guardian);
     }
 
-    // Ricontrolla l'unicità: tra la richiesta e la conferma qualcuno può aver preso email o username
+    // Ricontrolla l'unicità: tra la richiesta e la conferma qualcuno può aver preso email o username.
+    // Con googleSubject collega anche l'identità Google e considera l'email già verificata
     private Student createStudentAccount(RegistrationRequest request, OffsetDateTime now) {
         if (usersRepository.existsByEmailIncludingDeleted(request.getEmailNormalized())) {
             throw new BadRequestException("Esiste già un account con questa email");
         }
         if (studentsRepository.existsByUsername(request.getUsername())) {
             throw new BadRequestException("Username già in uso: ripeti la registrazione con un altro username");
+        }
+        boolean viaGoogle = request.getGoogleSubject() != null;
+        if (viaGoogle && userIdentitiesRepository
+                .findByProviderAndProviderSubject(AuthProvider.google, request.getGoogleSubject()).isPresent()) {
+            throw new BadRequestException("Questo profilo Google è già collegato a un altro account");
         }
 
         User user = User.builder()
@@ -348,9 +376,19 @@ public class RegistrationService implements IRegistrationService {
                 .lastName(request.getLastName())
                 .birthDate(request.getBirthDate())
                 .status(Status.active)
+                .emailVerifiedAt(viaGoogle ? now : null)
                 .build();
         user.getRoles().add(role(STUDENT_ROLE));
         usersRepository.save(user);
+
+        if (viaGoogle) {
+            userIdentitiesRepository.save(UserIdentity.builder()
+                    .user(user)
+                    .provider(AuthProvider.google)
+                    .providerSubject(request.getGoogleSubject())
+                    .emailAtLink(request.getEmailNormalized())
+                    .build());
+        }
 
         Student student = Student.builder()
                 .username(request.getUsername())
@@ -369,6 +407,58 @@ public class RegistrationService implements IRegistrationService {
                     .documentVersion(policyVersion)
                     .build());
         }
+    }
+
+    // Regole comuni alla registrazione classica e a quella con Google
+    private NewRegistration validateNewRegistration(String rawEmail, String rawUsername, LocalDate birthDate,
+                                                    String rawGuardianEmail, String policyVersion) {
+        requireCurrentPolicy(policyVersion);
+
+        String email = Emails.normalize(rawEmail);
+        String username = rawUsername.trim();
+        // L'età la calcola il server: il client non decide se serve il genitore
+        boolean requiresGuardianConsent = ageOf(birthDate) < digitalConsentAge;
+        // Dai 14 anni il consenso è autonomo: l'email del genitore non viene conservata
+        String guardianEmail = requiresGuardianConsent ? Emails.normalize(rawGuardianEmail) : null;
+
+        if (requiresGuardianConsent && (guardianEmail == null || guardianEmail.isEmpty())) {
+            throw new BadRequestException("Per gli studenti sotto i " + digitalConsentAge
+                    + " anni è obbligatoria l'email del genitore o tutore");
+        }
+        if (email.equals(guardianEmail)) {
+            throw new BadRequestException("L'email del genitore o tutore deve essere diversa da quella dello studente");
+        }
+        if (isUsernameTaken(username, email)) {
+            throw new BadRequestException("Username già in uso");
+        }
+        return new NewRegistration(email, username, requiresGuardianConsent, guardianEmail);
+    }
+
+    // Elimina le richieste aperte per la stessa email o la stessa identità Google
+    private void replacePendingRequests(String email, String googleSubject) {
+        registrationRequestsRepository.findByEmailNormalizedAndStatus(email, RegistrationRequestStatus.pending)
+                .ifPresent(registrationRequestsRepository::delete);
+        if (googleSubject != null) {
+            registrationRequestsRepository.findByGoogleSubjectAndStatus(googleSubject, RegistrationRequestStatus.pending)
+                    .ifPresent(registrationRequestsRepository::delete);
+        }
+        registrationRequestsRepository.flush();
+    }
+
+    // Assegna token e scadenza, salva la richiesta e pubblica l'invio del link
+    private void savePendingRequest(RegistrationRequest request) {
+        String rawToken = OpaqueTokens.generate();
+        OffsetDateTime now = OffsetDateTime.now();
+        request.setTokenHash(OpaqueTokens.hash(rawToken));
+        request.setExpiresAt(now.plus(requestTtl));
+        request.setLastSentAt(now);
+        registrationRequestsRepository.save(request);
+        publishConfirmation(request, rawToken);
+    }
+
+    private School resolveSchool(Long schoolId) {
+        return schoolId == null ? null
+                : schoolsRepository.findById(schoolId).orElseThrow(() -> new NotFoundException(schoolId));
     }
 
     private RegistrationRequest lockOpenRequest(String token) {
@@ -405,5 +495,9 @@ public class RegistrationService implements IRegistrationService {
     private Role role(String code) {
         return rolesRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalStateException("Ruolo " + code + " mancante: applicare la migrazione v0.3"));
+    }
+
+    private record NewRegistration(String email, String username, boolean requiresGuardianConsent,
+                                   String guardianEmail) {
     }
 }

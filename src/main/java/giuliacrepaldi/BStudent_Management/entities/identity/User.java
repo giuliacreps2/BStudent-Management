@@ -34,8 +34,9 @@ public class User {
     @Column(length = 320, unique = true, nullable = false)
     private String emailNormalized;
 
+    // Null per gli account solo Google (identità in user_identities): possono impostarla con il reset
     @ToString.Exclude
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String passwordHash;
 
     @Column(length = 100)

@@ -25,6 +25,11 @@ public interface RegistrationRequestsRepository extends JpaRepository<Registrati
 
     Optional<RegistrationRequest> findByEmailNormalizedAndStatus(String emailNormalized, RegistrationRequestStatus status);
 
+    Optional<RegistrationRequest> findByGoogleSubjectAndStatus(String googleSubject, RegistrationRequestStatus status);
+
+    boolean existsByGoogleSubjectAndStatusAndExpiresAtAfter(String googleSubject, RegistrationRequestStatus status,
+                                                           OffsetDateTime now);
+
     boolean existsByUsernameAndStatusAndEmailNormalizedNot(String username, RegistrationRequestStatus status,
                                                           String emailNormalized);
 

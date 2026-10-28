@@ -25,12 +25,14 @@ import java.time.OffsetDateTime;
 @Table(name = "registration_requests", indexes = {
         @Index(name = "idx_registration_requests_expiry", columnList = "expires_at")
 })
-// Unique parziali uq_open_registration_requests_email/_username (status = 'pending'): solo lato DB
+// Unique parziali uq_open_registration_requests_email/_username/_google (status = 'pending'): solo lato DB
 @Check(name = "chk_registration_requests_guardian",
         constraints = "requires_guardian_consent = (guardian_email_normalized IS NOT NULL)")
 @Check(name = "chk_registration_requests_guardian_email",
         constraints = "guardian_email_normalized IS NULL OR guardian_email_normalized <> email_normalized")
 @Check(name = "chk_registration_requests_expiry", constraints = "expires_at > created_at")
+@Check(name = "chk_registration_requests_credential",
+        constraints = "password_hash IS NOT NULL OR google_subject IS NOT NULL")
 public class RegistrationRequest {
 
     @Id
@@ -41,10 +43,15 @@ public class RegistrationRequest {
     @Column(length = 320, nullable = false)
     private String emailNormalized;
 
+    // Null per le registrazioni arrivate da Google (googleSubject valorizzato)
     @ToString.Exclude
-    @NotBlank
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String passwordHash;
+
+    // "sub" di Google da collegare all'account alla conferma
+    @ToString.Exclude
+    @Column(columnDefinition = "TEXT")
+    private String googleSubject;
 
     @Column(length = 100)
     private String firstName;

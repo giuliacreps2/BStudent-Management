@@ -1,5 +1,8 @@
 package giuliacrepaldi.BStudent_Management.security;
 
+import giuliacrepaldi.BStudent_Management.security.oauth2.GoogleLoginFailureHandler;
+import giuliacrepaldi.BStudent_Management.security.oauth2.GoogleLoginSuccessHandler;
+import giuliacrepaldi.BStudent_Management.security.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -23,10 +26,20 @@ public class SecurityConfig {
 
     private final TokenFilter tokenFilter;
     private final List<String> allowedOrigins;
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final GoogleLoginSuccessHandler googleLoginSuccessHandler;
+    private final GoogleLoginFailureHandler googleLoginFailureHandler;
 
-    public SecurityConfig(TokenFilter tokenFilter, @Value("${cors.allowed-origins}") List<String> allowedOrigins) {
+    public SecurityConfig(TokenFilter tokenFilter,
+                          @Value("${cors.allowed-origins}") List<String> allowedOrigins,
+                          HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository,
+                          GoogleLoginSuccessHandler googleLoginSuccessHandler,
+                          GoogleLoginFailureHandler googleLoginFailureHandler) {
         this.tokenFilter = tokenFilter;
         this.allowedOrigins = allowedOrigins;
+        this.authorizationRequestRepository = authorizationRequestRepository;
+        this.googleLoginSuccessHandler = googleLoginSuccessHandler;
+        this.googleLoginFailureHandler = googleLoginFailureHandler;
     }
 
     // TokenFilter è un @Component: senza questo bean Spring Boot lo registrerebbe anche come filtro
@@ -56,8 +69,18 @@ public class SecurityConfig {
         httpSecurity.formLogin(formLogin -> formLogin.disable());
         httpSecurity.csrf(csrf -> csrf.disable());
 
+        // Google OAuth2/OIDC: avvio su /oauth2/authorization/google, ritorno su /login/oauth2/code/google.
+        // Richiesta di autorizzazione in un cookie firmato (niente sessione); l'esito diventa il nostro JWT
+        httpSecurity.oauth2Login(oauth2 -> oauth2
+                .authorizationEndpoint(endpoint -> endpoint
+                        .authorizationRequestRepository(authorizationRequestRepository))
+                .successHandler(googleLoginSuccessHandler)
+                .failureHandler(googleLoginFailureHandler)
+        );
+
         httpSecurity.authorizeHttpRequests(req -> req
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/api/import/**").hasAuthority("ADMIN")
                 .requestMatchers("/roles/**").hasAuthority("ADMIN")
                 .requestMatchers("/auth/me", "/auth/me/**").authenticated()
