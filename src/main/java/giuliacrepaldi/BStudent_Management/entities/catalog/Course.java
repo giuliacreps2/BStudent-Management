@@ -1,7 +1,9 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.OffsetDateTime;
@@ -39,6 +41,13 @@ public class Course {
     private String courseImage;
 
     private OffsetDateTime withdrawnAt;
+
+    // Premium di default: un corso nuovo resta riservato finché non lo si segna free
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private AccessTier accessTier = AccessTier.premium;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)

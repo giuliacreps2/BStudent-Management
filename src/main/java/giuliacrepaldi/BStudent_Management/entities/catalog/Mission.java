@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -37,6 +38,11 @@ public class Mission {
     private int missionSortOrder;
 
     private OffsetDateTime withdrawnAt;
+
+    // Null = eredita dal corso; permette es. le prime missioni free di un corso premium
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "TEXT")
+    private AccessTier accessTier;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
