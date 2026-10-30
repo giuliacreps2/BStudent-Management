@@ -16,6 +16,8 @@ import java.util.EnumSet;
 import java.util.Set;
 
 @Service
+// TODO (billing, punto 4): ancora non usato dagli endpoint dei contenuti; prima decidere i contenuti free
+// e creare gli AccessGrant beta (vedi services/billing/package-info.java)
 public class EntitlementService implements IEntitlementService {
 
     // past_due: rinnovo fallito, Stripe sta ritentando. L'accesso resta fino alla fine del periodo;

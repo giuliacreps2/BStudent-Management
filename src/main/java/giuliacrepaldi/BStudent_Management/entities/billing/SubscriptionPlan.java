@@ -26,6 +26,7 @@ import java.time.OffsetDateTime;
 @Check(name = "chk_subscription_plans_max_students", constraints = "max_students BETWEEN 1 AND 2")
 @Check(name = "chk_subscription_plans_price", constraints = "price_cents > 0")
 @Check(name = "chk_subscription_plans_validity", constraints = "valid_to IS NULL OR valid_to > valid_from")
+// TODO (billing, punto 5): inserire piani (individuale/famiglia, mensile/annuale) e sconto beta quando i prezzi sono decisi
 public class SubscriptionPlan {
 
     @Id

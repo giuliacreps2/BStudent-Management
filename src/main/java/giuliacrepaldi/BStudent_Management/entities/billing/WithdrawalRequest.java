@@ -25,6 +25,7 @@ import java.time.OffsetDateTime;
 // Unique parziali uq_withdrawal_requests_subscription/_product_order (un recesso per contratto): solo lato DB
 @Check(name = "chk_withdrawal_requests_owner", constraints = "(subscription_id IS NULL) <> (product_order_id IS NULL)")
 @Check(name = "chk_withdrawal_requests_retained", constraints = "retained_amount_cents >= 0")
+// TODO (billing, punto 2): flusso del pulsante di recesso, vedi services/billing/package-info.java
 public class WithdrawalRequest {
 
     @Id

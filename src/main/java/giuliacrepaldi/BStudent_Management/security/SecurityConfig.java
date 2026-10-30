@@ -81,6 +81,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(req -> req
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                // TODO (billing, punto 1): webhook Stripe pubblico, autenticato dalla firma (Stripe-Signature)
                 .requestMatchers("/api/import/**").hasAuthority("ADMIN")
                 .requestMatchers("/roles/**").hasAuthority("ADMIN")
                 .requestMatchers("/auth/me", "/auth/me/**").authenticated()

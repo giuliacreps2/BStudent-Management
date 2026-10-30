@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 // Unique parziale uq_open_purchase_requests_student (status = 'pending'): solo lato DB
 @Check(name = "chk_purchase_requests_item", constraints = "(plan_id IS NULL) <> (product_id IS NULL)")
 @Check(name = "chk_purchase_requests_expiry", constraints = "expires_at > created_at")
+// TODO (billing, punto 3): flusso "chiedi al genitore", vedi services/billing/package-info.java
 public class PurchaseRequest {
 
     @Id
