@@ -1,7 +1,9 @@
 package giuliacrepaldi.BStudent_Management.entities.exercises;
 
+import giuliacrepaldi.BStudent_Management.enums.attempts.AssessmentMethod;
 import giuliacrepaldi.BStudent_Management.enums.exercises.KindQuestion;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.Check;
 
@@ -29,6 +31,16 @@ import org.hibernate.annotations.Check;
                 )
                 """
 )
+// Scelta multipla e completamento automatici, traduzione di versione docente,
+// traduzione di frase a scelta dell'autrice
+@Check(
+        name = "chk_questions_assessment_mode",
+        constraints = """
+                (kind IN ('multiple_choice', 'fill_in') AND assessment_mode = 'automatic')
+                OR (kind = 'passage_translation' AND assessment_mode = 'teacher')
+                OR (kind = 'sentence_translation' AND assessment_mode IN ('automatic', 'teacher'))
+                """
+)
 public class Question {
 
     @Id
@@ -47,6 +59,12 @@ public class Question {
     @Enumerated(EnumType.STRING)
     @Column(name = "kind", nullable = false, columnDefinition = "TEXT")
     private KindQuestion kindQuestion;
+
+    // Sulla domanda, quindi versionata con il contenuto
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private AssessmentMethod assessmentMode;
 
     @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY)

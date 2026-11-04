@@ -3,8 +3,13 @@ package giuliacrepaldi.BStudent_Management.entities.exercises;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Lesson;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
+import org.hibernate.annotations.Check;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -28,6 +33,8 @@ import java.util.Objects;
                 @Index(name = "idx_mission_exercises_entry", columnList = "question_bank_entry_id")
         }
 )
+@Check(name = "chk_mission_exercises_allowed_duration", constraints = "allowed_duration_ms > 0")
+@Check(name = "chk_mission_exercises_max_points", constraints = "max_points > 0")
 public class MissionExercise {
 
     @Id
@@ -49,6 +56,16 @@ public class MissionExercise {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_bank_entry_id", nullable = false)
     private QuestionBankEntry questionBankEntry;
+
+    // Valori sempre espliciti: alla creazione il service applica i default di academy_settings
+    @Positive
+    @Column(nullable = false)
+    private long allowedDurationMs;
+
+    @NotNull
+    @DecimalMin(value = "0.00", inclusive = false)
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal maxPoints;
 
     @PrePersist
     @PreUpdate

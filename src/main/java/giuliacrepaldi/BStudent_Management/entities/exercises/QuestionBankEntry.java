@@ -1,7 +1,9 @@
 package giuliacrepaldi.BStudent_Management.entities.exercises;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.OffsetDateTime;
@@ -25,5 +27,14 @@ public class QuestionBankEntry {
     @Column(name = "internal_title", nullable = false, columnDefinition = "TEXT")
     private String internalQuestionTitle;
 
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
+    private OffsetDateTime publishedAt;
+
+    // Valorizzato se e solo se status = withdrawn (chk_question_bank_entries_withdrawn)
     private OffsetDateTime withdrawnAt;
 }

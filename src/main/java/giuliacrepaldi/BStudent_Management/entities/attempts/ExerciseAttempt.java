@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.entities.attempts;
 
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
+import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
 import giuliacrepaldi.BStudent_Management.entities.identity.Student;
 import giuliacrepaldi.BStudent_Management.enums.attempts.ExerciseAttemptStatus;
 import giuliacrepaldi.BStudent_Management.enums.attempts.ExerciseContext;
@@ -37,6 +38,7 @@ import java.time.OffsetDateTime;
         indexes = {
                 @Index(name = "idx_exercise_attempts_entry", columnList = "question_bank_entry_id"),
                 @Index(name = "idx_exercise_attempts_item", columnList = "mission_exercise_id"),
+                @Index(name = "idx_exercise_attempts_version", columnList = "question_version_id"),
                 @Index(name = "idx_exercise_attempts_history", columnList = "student_id, question_bank_entry_id, started_at DESC")
         }
 )
@@ -75,6 +77,13 @@ public class ExerciseAttempt {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_bank_entry_id", nullable = false)
     private QuestionBankEntry questionBankEntry;
+
+    // Versione pubblicata al momento dell'avvio; la FK composta
+    // (question_version_id, question_bank_entry_id) la lega allo stesso esercizio
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_version_id", nullable = false)
+    private QuestionVersion questionVersion;
 
     // Valorizzato solo con context = mission
     @ToString.Exclude

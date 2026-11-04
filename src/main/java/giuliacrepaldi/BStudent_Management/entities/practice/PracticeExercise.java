@@ -2,6 +2,8 @@ package giuliacrepaldi.BStudent_Management.entities.practice;
 
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -33,7 +35,23 @@ public class PracticeExercise {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal maxPoints;
 
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
+    private OffsetDateTime publishedAt;
+
+    // Valorizzato se e solo se status = withdrawn (chk_practice_exercises_withdrawn)
     private OffsetDateTime withdrawnAt;
+
+    // Premium di default, come i corsi
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private AccessTier accessTier = AccessTier.premium;
 
     @ToString.Exclude
     @OneToOne(fetch = FetchType.LAZY)

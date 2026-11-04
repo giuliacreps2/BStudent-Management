@@ -14,6 +14,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "lesson_pages", uniqueConstraints = {
+        // DEFERRABLE nel DB: il riordino lo rimanda al COMMIT con SET CONSTRAINTS
         @UniqueConstraint(name = "lesson_pages_lesson_id_sort_order_idx", columnNames = {"lesson_id", "sort_order"})
 })
 public class LessonPage {

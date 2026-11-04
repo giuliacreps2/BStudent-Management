@@ -1,6 +1,7 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -40,6 +41,16 @@ public class Course {
     @Column(name = "cover_reference", columnDefinition = "TEXT")
     private String courseImage;
 
+    // Bozza di default: visibile agli studenti solo dopo la pubblicazione
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
+    private OffsetDateTime publishedAt;
+
+    // Valorizzato se e solo se status = withdrawn (chk_courses_withdrawn)
     private OffsetDateTime withdrawnAt;
 
     // Premium di default: un corso nuovo resta riservato finché non lo si segna free

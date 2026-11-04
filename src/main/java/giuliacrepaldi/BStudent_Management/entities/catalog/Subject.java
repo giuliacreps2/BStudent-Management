@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
+import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -22,4 +23,10 @@ public class Subject {
     @NotBlank
     @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     private String subjectName;
+
+    // Fallback dei pesi skill degli esercizi di missione (100%); null = pesi sempre espliciti
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "default_skill_id")
+    private Skill defaultSkill;
 }

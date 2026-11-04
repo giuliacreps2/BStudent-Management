@@ -1,8 +1,10 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
@@ -17,6 +19,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "missions", uniqueConstraints = {
+        // DEFERRABLE nel DB: il riordino lo rimanda al COMMIT con SET CONSTRAINTS
         @UniqueConstraint(name = "missions_course_id_sort_order_idx", columnNames = {"course_id", "sort_order"})
 })
 public class Mission {
@@ -37,9 +40,19 @@ public class Mission {
     @Column(name = "sort_order", nullable = false)
     private int missionSortOrder;
 
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
+    private OffsetDateTime publishedAt;
+
+    // Valorizzato se e solo se status = withdrawn (chk_missions_withdrawn)
     private OffsetDateTime withdrawnAt;
 
-    // Null = eredita dal corso; permette es. le prime missioni free di un corso premium
+    // Null = eredita dal corso; permette es. le prime missioni free di un corso premium.
+    // Premium in un corso free non ammesso: lo verifica il service
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "TEXT")
     private AccessTier accessTier;

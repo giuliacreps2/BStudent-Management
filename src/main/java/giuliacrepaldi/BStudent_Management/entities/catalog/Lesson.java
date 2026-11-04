@@ -1,7 +1,9 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
@@ -16,8 +18,9 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "lessons", uniqueConstraints = {
+        // DEFERRABLE nel DB: il riordino lo rimanda al COMMIT con SET CONSTRAINTS
         @UniqueConstraint(name = "lessons_mission_id_sort_order_idx", columnNames = {"mission_id", "sort_order"}),
-        // Target della FK composta (lesson_id, mission_id) di mission_exercises
+        // Target della FK composta (lesson_id, mission_id) di mission_exercises: deve restare non deferrable
         @UniqueConstraint(name = "lessons_lesson_id_mission_id_idx", columnNames = {"lesson_id", "mission_id"})
 })
 public class Lesson {
@@ -34,6 +37,15 @@ public class Lesson {
     @Column(name = "sort_order", nullable = false)
     private int lessonSortOrder;
 
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
+    private OffsetDateTime publishedAt;
+
+    // Valorizzato se e solo se status = withdrawn (chk_lessons_withdrawn)
     private OffsetDateTime withdrawnAt;
 
     @ToString.Exclude
