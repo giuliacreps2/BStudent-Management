@@ -4,7 +4,6 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
-import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionDTO;
@@ -15,6 +14,7 @@ import giuliacrepaldi.BStudent_Management.repositories.exercises.MissionExercise
 import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionVersionsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ICoursesService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
+import giuliacrepaldi.BStudent_Management.utilities.Reorders;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,6 +31,7 @@ import java.util.stream.Collectors;
 public class MissionsService implements IMissionsService {
 
     private static final BigDecimal FULL_WEIGHT = BigDecimal.valueOf(100);
+    private static final String SORT_ORDER_CONSTRAINT = "missions_course_id_sort_order_idx";
 
     private final MissionsRepository missionsRepository;
     private final LessonsRepository lessonsRepository;
@@ -97,22 +96,10 @@ public class MissionsService implements IMissionsService {
     @Override
     @Transactional
     public List<Mission> reorderMissions(long courseId, List<Long> missionIds) {
-        List<Mission> missions = findByCourse(courseId);
-
-        Set<Long> requested = new HashSet<>(missionIds);
-        if (requested.size() != missionIds.size()) {
-            throw new BadRequestException("L'ordine contiene ID ripetuti");
-        }
-        Map<Long, Mission> byId = missions.stream()
+        Map<Long, Mission> byId = findByCourse(courseId).stream()
                 .collect(Collectors.toMap(Mission::getMissionId, Function.identity()));
-        if (!requested.equals(byId.keySet())) {
-            throw new BadRequestException("L'ordine deve contenere tutti e soli gli ID delle missioni del corso");
-        }
-
-        // Il vincolo (course_id, sort_order) è DEFERRABLE: rimandato al COMMIT, gli scambi di posizione
-        // non lo violano a metà. Vale solo per questa transazione
-        entityManager.createNativeQuery("SET CONSTRAINTS missions_course_id_sort_order_idx DEFERRED")
-                .executeUpdate();
+        Reorders.validateIds(missionIds, byId.keySet(), "le missioni del corso");
+        Reorders.deferUniqueOrder(entityManager, SORT_ORDER_CONSTRAINT);
 
         List<Mission> reordered = new ArrayList<>(missionIds.size());
         for (int i = 0; i < missionIds.size(); i++) {

@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface MissionExercisesRepository extends JpaRepository<MissionExercise, Long> {
 
+    boolean existsByLesson_LessonId(Long lessonId);
+
     // Esercizi delle lezioni nello stato indicato, con lezione ed esercizio già caricati
     @Query("""
             SELECT me FROM MissionExercise me

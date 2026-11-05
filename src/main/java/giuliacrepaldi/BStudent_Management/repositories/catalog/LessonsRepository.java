@@ -16,6 +16,14 @@ public interface LessonsRepository extends JpaRepository<Lesson, Long> {
 
     boolean existsByMission_MissionIdAndStatus(Long missionId, ContentStatus status);
 
+    long countByMission_MissionIdAndStatus(Long missionId, ContentStatus status);
+
+    List<Lesson> findByMission_MissionIdOrderByLessonSortOrder(Long missionId);
+
+    // 0 se la missione non ha lezioni: la nuova va in coda con max + 1
+    @Query("SELECT COALESCE(MAX(l.lessonSortOrder), 0) FROM Lesson l WHERE l.mission.missionId = :missionId")
+    int findMaxSortOrder(@Param("missionId") Long missionId);
+
     // Lezioni nello stato indicato senza esercizio collegato: bloccano la pubblicazione della missione
     @Query("""
             SELECT l.lessonTitle FROM Lesson l
