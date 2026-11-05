@@ -6,4 +6,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SubjectsRepository extends JpaRepository<Subject, Long> {
+
+    boolean existsBySubjectNameIgnoreCase(String subjectName);
+
+    boolean existsBySubjectNameIgnoreCaseAndSubjectIdNot(String subjectName, Long subjectId);
 }

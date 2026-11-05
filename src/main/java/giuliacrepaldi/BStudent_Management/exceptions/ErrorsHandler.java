@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.exceptions;
 
 import giuliacrepaldi.BStudent_Management.payloads.ErrorsDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -62,11 +63,34 @@ public class ErrorsHandler {
         return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
     }
 
+    //403: controlli di proprietà o di accesso premium fatti nei service
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorsDTO handleForbiddenEx(ForbiddenException ex) {
+        return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
+    }
+
     //404
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorsDTO handleNotFoundEx(NotFoundException ex) {
         return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
+    }
+
+    //409
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorsDTO handleConflictEx(ConflictException ex) {
+        return new ErrorsDTO(ex.getMessage(), OffsetDateTime.now());
+    }
+
+    //409: un vincolo del DB ha respinto il dato (unicità, FK, CHECK) perché il service non
+    //l'aveva intercettato prima. Il nome del vincolo resta nei log, al client un messaggio generico
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorsDTO handleDataIntegrityEx(DataIntegrityViolationException ex) {
+        log.warn("Vincolo del database violato: {}", ex.getMostSpecificCause().getMessage());
+        return new ErrorsDTO("I dati sono in conflitto con lo stato attuale", OffsetDateTime.now());
     }
 
     //500: il dettaglio resta nei log, al client un messaggio generico

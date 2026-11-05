@@ -53,6 +53,7 @@ public class Course {
     // Valorizzato se e solo se status = withdrawn (chk_courses_withdrawn)
     private OffsetDateTime withdrawnAt;
 
+    // Default delle missioni che non ne indicano uno proprio (Mission.accessTier null).
     // Premium di default: un corso nuovo resta riservato finché non lo si segna free
     @NotNull
     @Builder.Default

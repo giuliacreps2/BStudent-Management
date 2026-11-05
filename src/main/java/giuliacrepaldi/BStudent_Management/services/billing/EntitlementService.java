@@ -42,6 +42,9 @@ public class EntitlementService implements IEntitlementService {
                 || subscriptionStudentsRepository.isCovered(studentId, PREMIUM_STATUSES, now);
     }
 
+    // TODO (Academy, Blocco 4): non usarlo per aprire la pagina del corso. Il corso pubblicato è visibile
+    // a tutti con le missioni premium marcate col lucchetto: il controllo vero è canAccess(mission),
+    // all'apertura o all'avvio della missione. Questo resta per "tutto il corso accessibile"
     @Override
     @Transactional(readOnly = true)
     public boolean canAccess(Long studentId, Course course) {

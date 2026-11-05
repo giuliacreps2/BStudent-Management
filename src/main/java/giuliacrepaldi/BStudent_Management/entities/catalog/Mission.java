@@ -51,8 +51,8 @@ public class Mission {
     // Valorizzato se e solo se status = withdrawn (chk_missions_withdrawn)
     private OffsetDateTime withdrawnAt;
 
-    // Null = eredita dal corso; permette es. le prime missioni free di un corso premium.
-    // Premium in un corso free non ammesso: lo verifica il service
+    // Null = eredita dal corso. Il livello del corso è solo il default: ammesse sia missioni free
+    // in un corso premium sia missioni premium in un corso free
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "TEXT")
     private AccessTier accessTier;
