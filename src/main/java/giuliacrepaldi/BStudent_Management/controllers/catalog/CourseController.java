@@ -1,4 +1,4 @@
-package giuliacrepaldi.BStudent_Management.controllers.identity.catalog;
+package giuliacrepaldi.BStudent_Management.controllers.catalog;
 
 import giuliacrepaldi.BStudent_Management.payloads.catalog.CourseDTO;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.CourseResponseDTO;

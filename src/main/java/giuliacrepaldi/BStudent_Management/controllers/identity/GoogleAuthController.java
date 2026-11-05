@@ -30,6 +30,13 @@ public class GoogleAuthController {
         this.tokenTools = tokenTools;
     }
 
+    private static String requireToken(String onboardingToken) {
+        if (onboardingToken == null || onboardingToken.isBlank()) {
+            throw new UnauthorizedException("Registrazione con Google scaduta: accedi di nuovo con Google");
+        }
+        return onboardingToken;
+    }
+
     // Precompila il form con email e nome ricevuti da Google
     @GetMapping("/onboarding")
     public GoogleOnboardingDTO onboarding(
@@ -55,12 +62,5 @@ public class GoogleAuthController {
                     .header(HttpHeaders.SET_COOKIE, clearOnboarding)
                     .build();
         };
-    }
-
-    private static String requireToken(String onboardingToken) {
-        if (onboardingToken == null || onboardingToken.isBlank()) {
-            throw new UnauthorizedException("Registrazione con Google scaduta: accedi di nuovo con Google");
-        }
-        return onboardingToken;
     }
 }

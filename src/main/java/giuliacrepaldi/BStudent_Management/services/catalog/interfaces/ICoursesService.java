@@ -8,6 +8,15 @@ import org.springframework.data.domain.Page;
  * Corsi della materia (blueprint §5.1).
  * Titolo, descrizione breve, presentazione estesa e copertina facoltativa.
  * findAll mostra tutti gli stati, perché è la vista dell'Admin.
+ * <p>
+ * TODO "In arrivo": l'Admin annuncia un corso ancora in bozza e lo studente lo vede nel catalogo
+ * con solo copertina, titolo e descrizione breve, col lucchetto e senza missioni né lezioni.
+ * Proposta: colonna courses.announced_at (migrazione) e metodi announceCourse/unannounceCourse;
+ * draft + announced_at = teaser. Niente date di uscita promesse se non certe (pubblicità ingannevole).
+ * <p>
+ * TODO anteprima (Blocco 4): ?preview=true sugli endpoint studente accettato solo per l'ADMIN;
+ * mostra anche bozze e premium con un banner "non visibile agli studenti" e non salva tentativi
+ * né progressi. Per gli altri ruoli il parametro è ignorato.
  */
 public interface ICoursesService {
 
