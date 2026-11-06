@@ -4,6 +4,7 @@ import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionResponseDTO;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -38,6 +39,9 @@ public interface IQuestionBankService {
     List<QuestionVersion> findVersions(long questionBankEntryId); // per numero di versione
 
     QuestionVersion findVersionById(long questionVersionId);
+
+    // Versione con domanda, risposte e rubriche: vista editoriale, include le soluzioni
+    QuestionVersionResponseDTO findVersionDetails(long questionVersionId);
 
     QuestionVersion createDraftVersion(long questionBankEntryId, QuestionVersionDTO body); // numero = ultimo + 1
 

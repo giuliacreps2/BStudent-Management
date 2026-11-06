@@ -1,10 +1,6 @@
-package giuliacrepaldi.BStudent_Management.controllers.identity.catalog;
+package giuliacrepaldi.BStudent_Management.controllers.catalog;
 
-import giuliacrepaldi.BStudent_Management.payloads.catalog.LessonDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.LessonPageDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.LessonPageResponseDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.LessonResponseDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.ReorderDTO;
+import giuliacrepaldi.BStudent_Management.payloads.catalog.*;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ILessonsService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

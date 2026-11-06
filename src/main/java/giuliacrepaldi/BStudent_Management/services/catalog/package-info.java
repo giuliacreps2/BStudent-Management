@@ -12,5 +12,18 @@
  * - Il delete fisico è ammesso solo se il contenuto non è mai stato pubblicato, altrimenti ConflictException.
  * - I figli si leggono dal loro contenitore (findByCourse, findByMission…), in List ordinate. Page resta solo dove gli elenchi possono crescere: materie, corsi, esercizi.
  * - Ho tolto public, che nelle interfacce è ridondante.
+ * <p>
+ * con "riordino"
+ * <p>
+ * Sono tutte e due le cose: cambi l'ordine, e di conseguenza la numerazione. Ogni missione, lezione e pagina ha un numero sortOrder (1, 2, 3…) che decide in che ordine la vede lo studente. Per le lezioni è anche l'ordine degli esercizi della missione.
+ * <p>
+ * Con il riordino mandi la lista degli ID nel nuovo ordine, e il backend riassegna i numeri da 1 in su:
+ * prima:  L1 = 1, L2 = 2, L3 = 3
+ * PUT .../lessons/order   { "ids": [3, 1, 2] }
+ * dopo:   L3 = 1, L1 = 2, L2 = 3
+ * Nel frontend è il trascinamento (drag & drop) di un elenco: alla fine si manda l'ordine completo.
+ * <p>
+ * Qui entra in gioco il vincolo DEFERRABLE. Due lezioni della stessa missione non possono avere lo stesso numero. Se aggiorni una riga alla volta, a metà dello scambio L3 è già 1 mentre L1 è ancora 1, e il DB rifiuterebbe la modifica. Con SET CONSTRAINTS ... DEFERRED il controllo avviene solo alla fine, quando i numeri sono di nuovo tutti diversi. Il backend chiede la lista completa proprio per rinumerare tutto in una volta, senza buchi e senza doppioni.
+ *
  */
 package giuliacrepaldi.BStudent_Management.services.catalog;
