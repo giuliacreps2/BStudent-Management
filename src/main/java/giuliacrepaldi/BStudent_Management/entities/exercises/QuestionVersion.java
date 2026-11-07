@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 
@@ -23,6 +25,8 @@ import java.time.OffsetDateTime;
                 columnNames = {"question_version_id", "question_bank_entry_id"})
 })
 @Check(name = "chk_question_versions_published", constraints = "NOT is_published OR published_at IS NOT NULL")
+@Check(name = "chk_question_versions_replaced",
+        constraints = "replaced_at IS NULL OR (NOT is_published AND published_at IS NOT NULL)")
 // Indice unico parziale gestito solo dal DB:
 // uq_question_versions_published (question_bank_entry_id) WHERE is_published
 public class QuestionVersion {
@@ -41,7 +45,21 @@ public class QuestionVersion {
     @Column(nullable = false)
     private boolean isPublished = false;
 
+    // Ultima pubblicazione: con replacedAt dà il periodo "in uso dal ... al ..."
     private OffsetDateTime publishedAt;
+
+    // Quando ha smesso di essere la versione pubblicata (chk_question_versions_replaced)
+    private OffsetDateTime replacedAt;
+
+    // Date editoriali (v0.7), impostate da Hibernate. updatedAt va toccato a mano quando cambiano
+    // domanda, risposte o rubriche: stanno in altre tabelle e non rendono "sporca" la versione
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)

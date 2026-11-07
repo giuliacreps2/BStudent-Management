@@ -13,7 +13,9 @@ public record LessonResponseDTO(
         int sortOrder,
         ContentStatus status,
         OffsetDateTime publishedAt,
-        OffsetDateTime withdrawnAt) {
+        OffsetDateTime withdrawnAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {
 
     public static LessonResponseDTO from(Lesson lesson) {
         return new LessonResponseDTO(
@@ -23,6 +25,8 @@ public record LessonResponseDTO(
                 lesson.getLessonSortOrder(),
                 lesson.getStatus(),
                 lesson.getPublishedAt(),
-                lesson.getWithdrawnAt());
+                lesson.getWithdrawnAt(),
+                lesson.getCreatedAt(),
+                lesson.getUpdatedAt());
     }
 }

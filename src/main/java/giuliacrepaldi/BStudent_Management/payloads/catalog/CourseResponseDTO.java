@@ -17,7 +17,9 @@ public record CourseResponseDTO(
         AccessTier accessTier,
         ContentStatus status,
         OffsetDateTime publishedAt,
-        OffsetDateTime withdrawnAt) {
+        OffsetDateTime withdrawnAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {
 
     public static CourseResponseDTO from(Course course) {
         return new CourseResponseDTO(
@@ -30,6 +32,8 @@ public record CourseResponseDTO(
                 course.getAccessTier(),
                 course.getStatus(),
                 course.getPublishedAt(),
-                course.getWithdrawnAt());
+                course.getWithdrawnAt(),
+                course.getCreatedAt(),
+                course.getUpdatedAt());
     }
 }

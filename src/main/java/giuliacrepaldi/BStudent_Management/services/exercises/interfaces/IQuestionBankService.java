@@ -3,6 +3,7 @@ package giuliacrepaldi.BStudent_Management.services.exercises.interfaces;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryListItemDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionResponseDTO;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,9 @@ public interface IQuestionBankService {
     QuestionBankEntry findById(long questionBankEntryId);
 
     Page<QuestionBankEntry> findAll(int page, int size, String sortBy);
+
+    // Elenco dell'Admin con data della prima versione e versione in uso (da quando)
+    Page<QuestionBankEntryListItemDTO> findAllWithVersionInfo(int page, int size, String sortBy);
 
     QuestionBankEntry findByIdAndUpdate(long questionBankEntryId, QuestionBankEntryDTO body); // titolo interno
 

@@ -10,7 +10,11 @@ public record QuestionVersionSummaryDTO(
         Long questionBankEntryId,
         int versionNumber,
         boolean published,
-        OffsetDateTime publishedAt) {
+        OffsetDateTime publishedAt,
+        // Fine dell'uso come versione pubblicata: null se in uso o mai pubblicata
+        OffsetDateTime replacedAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {
 
     public static QuestionVersionSummaryDTO from(QuestionVersion version) {
         return new QuestionVersionSummaryDTO(
@@ -18,6 +22,9 @@ public record QuestionVersionSummaryDTO(
                 version.getQuestionBankEntry().getQuestionBankEntryId(),
                 version.getQuestionVersionNumber(),
                 version.isPublished(),
-                version.getPublishedAt());
+                version.getPublishedAt(),
+                version.getReplacedAt(),
+                version.getCreatedAt(),
+                version.getUpdatedAt());
     }
 }

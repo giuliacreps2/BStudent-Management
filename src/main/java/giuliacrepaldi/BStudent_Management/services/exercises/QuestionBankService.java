@@ -12,6 +12,8 @@ import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryListItemDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryVersionInfo;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO.AnswerDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO.RubricCriterionDTO;
@@ -32,12 +34,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class QuestionBankService implements IQuestionBankService {
 
-    private static final Set<String> SORTS = Set.of("questionBankEntryId", "internalQuestionTitle", "status");
+    private static final Set<String> SORTS =
+            Set.of("questionBankEntryId", "internalQuestionTitle", "status", "createdAt", "updatedAt");
 
     private final QuestionBankEntriesRepository entriesRepository;
     private final QuestionVersionsRepository versionsRepository;
@@ -89,6 +95,18 @@ public class QuestionBankService implements IQuestionBankService {
     @Transactional(readOnly = true)
     public Page<QuestionBankEntry> findAll(int page, int size, String sortBy) {
         return entriesRepository.findAll(Pageables.of(page, size, sortBy, SORTS, "internalQuestionTitle"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<QuestionBankEntryListItemDTO> findAllWithVersionInfo(int page, int size, String sortBy) {
+        Page<QuestionBankEntry> entries = findAll(page, size, sortBy);
+        List<Long> ids = entries.map(QuestionBankEntry::getQuestionBankEntryId).getContent();
+        Map<Long, QuestionBankEntryVersionInfo> infoById = ids.isEmpty() ? Map.of()
+                : versionsRepository.findVersionInfo(ids).stream()
+                        .collect(Collectors.toMap(QuestionBankEntryVersionInfo::questionBankEntryId, Function.identity()));
+        // Un esercizio senza versioni non compare nel riepilogo: campi null
+        return entries.map(entry -> QuestionBankEntryListItemDTO.of(entry, infoById.get(entry.getQuestionBankEntryId())));
     }
 
     @Override
@@ -199,6 +217,7 @@ public class QuestionBankService implements IQuestionBankService {
         applyQuestionFields(question, content);
         questionsRepository.save(question);
         writeAnswersAndCriteria(question, content);
+        touch(entry);
         return version;
     }
 
@@ -215,6 +234,9 @@ public class QuestionBankService implements IQuestionBankService {
         rubricCriteriaRepository.deleteByQuestionId(question.getQuestionId());
         applyQuestionFields(question, content);
         writeAnswersAndCriteria(question, content);
+        // Il contenuto sta in altre tabelle: la versione non risulta modificata da sola
+        version.setUpdatedAt(OffsetDateTime.now());
+        touch(version.getQuestionBankEntry());
         return version;
     }
 
@@ -228,9 +250,14 @@ public class QuestionBankService implements IQuestionBankService {
         // Prima si toglie il flag alla versione pubblicata (UPDATE eseguito subito), poi lo si mette a
         // questa: l'indice unico parziale non è DEFERRABLE. Da ora i nuovi tentativi usano questa versione,
         // quelli già avviati conservano la propria (exercise_attempts.question_version_id)
-        versionsRepository.unpublishAll(version.getQuestionBankEntry().getQuestionBankEntryId());
+        // La versione sostituita riceve replaced_at: "in uso dal published_at al replaced_at"
+        OffsetDateTime now = OffsetDateTime.now();
+        versionsRepository.unpublishAll(version.getQuestionBankEntry().getQuestionBankEntryId(), now);
         version.setPublished(true);
-        version.setPublishedAt(OffsetDateTime.now());
+        version.setPublishedAt(now);
+        // Una versione sostituita può tornare in uso: il periodo riparte da ora
+        version.setReplacedAt(null);
+        touch(version.getQuestionBankEntry());
         return version;
     }
 
@@ -239,7 +266,13 @@ public class QuestionBankService implements IQuestionBankService {
     public void deleteDraftVersion(long questionVersionId) {
         QuestionVersion version = findVersionById(questionVersionId);
         requireEditable(version);
+        touch(version.getQuestionBankEntry());
         deleteVersionContent(version);
+    }
+
+    // "Ultima modifica" dell'esercizio comprende le modifiche alle sue versioni
+    private static void touch(QuestionBankEntry entry) {
+        entry.setUpdatedAt(OffsetDateTime.now());
     }
 
     // Modificabile o cancellabile solo una bozza mai pubblicata e mai svolta

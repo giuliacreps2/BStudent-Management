@@ -21,7 +21,7 @@ import java.util.Set;
 @Service
 public class CoursesService implements ICoursesService {
 
-    private static final Set<String> SORTS = Set.of("courseId", "courseTitle", "status", "publishedAt");
+    private static final Set<String> SORTS = Set.of("courseId", "courseTitle", "status", "publishedAt", "createdAt", "updatedAt");
 
     private final CoursesRepository coursesRepository;
     private final MissionsRepository missionsRepository;

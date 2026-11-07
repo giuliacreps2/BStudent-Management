@@ -174,6 +174,7 @@ public class LessonsService implements ILessonsService {
                 .lessonPageSortOrder(lessonPagesRepository.findMaxSortOrder(lessonId) + 1)
                 .build();
         applyContent(page, body);
+        touch(lesson);
         return lessonPagesRepository.save(page);
     }
 
@@ -190,6 +191,7 @@ public class LessonsService implements ILessonsService {
         LessonPage page = findPageById(lessonPageId);
         // Sostituisce il contenuto: si può anche cambiare tipo (es. da testo a immagine)
         applyContent(page, body);
+        touch(page.getLesson());
         return page;
     }
 
@@ -207,6 +209,9 @@ public class LessonsService implements ILessonsService {
             page.setLessonPageSortOrder(i + 1);
             reordered.add(page);
         }
+        if (!reordered.isEmpty()) {
+            touch(reordered.getFirst().getLesson());
+        }
         return reordered;
     }
 
@@ -222,6 +227,12 @@ public class LessonsService implements ILessonsService {
         }
         // Il buco nell'ordine (es. 1, 3) non viola il vincolo: si sistema con il riordino
         lessonPagesRepository.delete(page);
+        touch(lesson);
+    }
+
+    // "Ultima modifica" della lezione comprende le modifiche alle sue pagine
+    private static void touch(Lesson lesson) {
+        lesson.setUpdatedAt(OffsetDateTime.now());
     }
 
     private LessonPage findPageById(long lessonPageId) {

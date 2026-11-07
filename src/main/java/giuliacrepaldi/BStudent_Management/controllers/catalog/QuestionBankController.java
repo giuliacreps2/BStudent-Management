@@ -27,11 +27,12 @@ public class QuestionBankController {
         return QuestionBankEntryResponseDTO.from(questionBankService.saveNewQuestionBankEntry(body));
     }
 
+    // Con data della prima versione e versione in uso (da quando); sortBy ammette anche createdAt e updatedAt
     @GetMapping("/exercises")
-    public PagedModel<QuestionBankEntryResponseDTO> findAll(@RequestParam(defaultValue = "0") int page,
+    public PagedModel<QuestionBankEntryListItemDTO> findAll(@RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "20") int size,
                                                             @RequestParam(defaultValue = "internalQuestionTitle") String sortBy) {
-        return new PagedModel<>(questionBankService.findAll(page, size, sortBy).map(QuestionBankEntryResponseDTO::from));
+        return new PagedModel<>(questionBankService.findAllWithVersionInfo(page, size, sortBy));
     }
 
     @GetMapping("/exercises/{exerciseId}")

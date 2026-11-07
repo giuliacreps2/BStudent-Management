@@ -10,7 +10,9 @@ public record QuestionBankEntryResponseDTO(
         String internalTitle,
         ContentStatus status,
         OffsetDateTime publishedAt,
-        OffsetDateTime withdrawnAt) {
+        OffsetDateTime withdrawnAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {
 
     public static QuestionBankEntryResponseDTO from(QuestionBankEntry entry) {
         return new QuestionBankEntryResponseDTO(
@@ -18,6 +20,8 @@ public record QuestionBankEntryResponseDTO(
                 entry.getInternalQuestionTitle(),
                 entry.getStatus(),
                 entry.getPublishedAt(),
-                entry.getWithdrawnAt());
+                entry.getWithdrawnAt(),
+                entry.getCreatedAt(),
+                entry.getUpdatedAt());
     }
 }

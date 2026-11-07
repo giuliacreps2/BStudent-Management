@@ -16,7 +16,9 @@ public record MissionResponseDTO(
         AccessTier accessTier,
         ContentStatus status,
         OffsetDateTime publishedAt,
-        OffsetDateTime withdrawnAt) {
+        OffsetDateTime withdrawnAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {
 
     public static MissionResponseDTO from(Mission mission) {
         return new MissionResponseDTO(
@@ -28,6 +30,8 @@ public record MissionResponseDTO(
                 mission.getAccessTier(),
                 mission.getStatus(),
                 mission.getPublishedAt(),
-                mission.getWithdrawnAt());
+                mission.getWithdrawnAt(),
+                mission.getCreatedAt(),
+                mission.getUpdatedAt());
     }
 }

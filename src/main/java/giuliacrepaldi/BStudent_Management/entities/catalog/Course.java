@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 
@@ -52,6 +54,15 @@ public class Course {
 
     // Valorizzato se e solo se status = withdrawn (chk_courses_withdrawn)
     private OffsetDateTime withdrawnAt;
+
+    // Date editoriali (v0.7), impostate da Hibernate
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
 
     // Default delle missioni che non ne indicano uno proprio (Mission.accessTier null).
     // Premium di default: un corso nuovo resta riservato finché non lo si segna free

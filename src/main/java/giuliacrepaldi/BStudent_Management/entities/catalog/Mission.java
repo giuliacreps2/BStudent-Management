@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.OffsetDateTime;
 
@@ -50,6 +52,15 @@ public class Mission {
 
     // Valorizzato se e solo se status = withdrawn (chk_missions_withdrawn)
     private OffsetDateTime withdrawnAt;
+
+    // Date editoriali (v0.7), impostate da Hibernate
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
 
     // Null = eredita dal corso. Il livello del corso è solo il default: ammesse sia missioni free
     // in un corso premium sia missioni premium in un corso free
