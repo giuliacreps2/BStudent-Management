@@ -51,7 +51,13 @@ public class QuestionBankController {
         return QuestionBankEntryResponseDTO.from(questionBankService.publishQuestionBankEntry(exerciseId));
     }
 
-    // 409 se è collegato a una lezione pubblicata o pubblicato in Palestra
+    // Dove è usato: il frontend lo mostra prima del ritiro e avvisa per le missioni che resterebbero senza esercizi
+    @GetMapping("/exercises/{exerciseId}/usages")
+    public QuestionBankEntryUsagesDTO findUsages(@PathVariable long exerciseId) {
+        return questionBankService.findUsages(exerciseId);
+    }
+
+    // Ammesso anche se usato in missioni pubblicate (sparisce dalla sequenza); 409 se pubblicato in Palestra
     @PatchMapping("/exercises/{exerciseId}/withdraw")
     public QuestionBankEntryResponseDTO withdraw(@PathVariable long exerciseId) {
         return QuestionBankEntryResponseDTO.from(questionBankService.withdrawQuestionBankEntry(exerciseId));

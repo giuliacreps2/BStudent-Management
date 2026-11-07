@@ -4,6 +4,7 @@ import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryListItemDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryUsagesDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionResponseDTO;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,11 @@ public interface IQuestionBankService {
 
     QuestionBankEntry publishQuestionBankEntry(long questionBankEntryId); // solo con una versione pubblicata
 
-    QuestionBankEntry withdrawQuestionBankEntry(long questionBankEntryId); // published -> withdrawn
+    // Missioni in cui è usato (con quelle che resterebbero senza esercizi) e Palestra: da mostrare prima del ritiro
+    QuestionBankEntryUsagesDTO findUsages(long questionBankEntryId);
+
+    // published -> withdrawn, anche se usato in missioni pubblicate: sparisce dalla loro sequenza
+    QuestionBankEntry withdrawQuestionBankEntry(long questionBankEntryId);
 
     void deleteQuestionBankEntry(long questionBankEntryId); // solo draft mai pubblicato e mai collegato
 

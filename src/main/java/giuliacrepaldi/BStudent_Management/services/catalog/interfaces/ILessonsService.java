@@ -9,29 +9,26 @@ import java.util.List;
 
 /**
  * Lezioni della missione e loro pagine ordinate (blueprint §5.1).
- * Ordine positivo e unico nella missione; blocchi testo, immagine e video coerenti col tipo.
+ * L'ordine della lezione nella missione è quello del suo passo (IMissionsService, v0.8); blocchi testo, immagine e video coerenti col tipo.
  * Riordino atomico con gli ID del contenitore, senza duplicati.
  * <p>
- * Aggiunti reorderLessons e i metodi delle pagine: creazione in coda, lettura in ordine, modifica, riordino, delete fisico. Le pagine non hanno uno stato proprio e nessun progresso le usa come riferimento.
- * - publishLesson è ammesso solo se la lezione ha un esercizio collegato.
+ * Metodi delle pagine: creazione in coda, lettura in ordine, modifica, riordino, delete fisico. Le pagine non hanno uno stato proprio e nessun progresso le usa come riferimento.
+ * - publishLesson non richiede un esercizio (v0.8). withdrawLesson: in una missione pubblicata la sequenza deve restare valida.
  */
 public interface ILessonsService {
 
     //Admin
     //CRUD -> create, read, update, delete
 
-    Lesson saveNewLesson(long missionId, LessonDTO body); // nasce draft, in coda all'ordine
+    Lesson saveNewLesson(long missionId, LessonDTO body); // nasce draft, in coda alla sequenza della missione
 
     Lesson findById(long lessonId);
 
-    List<Lesson> findByMission(long missionId); // ordinate per sortOrder
+    List<Lesson> findByMission(long missionId); // nell'ordine della sequenza
 
     Lesson findByIdAndUpdate(long lessonId, LessonDTO body);
 
-    // Tutti e soli gli ID delle lezioni della missione, nel nuovo ordine
-    List<Lesson> reorderLessons(long missionId, List<Long> lessonIds);
-
-    Lesson publishLesson(long lessonId); // draft/withdrawn -> published, solo con esercizio collegato
+    Lesson publishLesson(long lessonId); // draft/withdrawn -> published, solo con almeno una pagina
 
     Lesson withdrawLesson(long lessonId); // published -> withdrawn
 

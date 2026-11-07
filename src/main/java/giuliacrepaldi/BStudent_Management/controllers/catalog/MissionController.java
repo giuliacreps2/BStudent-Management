@@ -1,8 +1,6 @@
 package giuliacrepaldi.BStudent_Management.controllers.catalog;
 
-import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionResponseDTO;
-import giuliacrepaldi.BStudent_Management.payloads.catalog.ReorderDTO;
+import giuliacrepaldi.BStudent_Management.payloads.catalog.*;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -51,6 +49,25 @@ public class MissionController {
         return MissionResponseDTO.from(missionsService.findByIdAndUpdate(missionId, body));
     }
 
+    //SEQUENZA: lezioni ed esercizi in un unico ordine
+    @GetMapping("/missions/{missionId}/steps")
+    public List<MissionStepResponseDTO> findSteps(@PathVariable long missionId) {
+        return missionsService.findSteps(missionId).stream().map(MissionStepResponseDTO::from).toList();
+    }
+
+    // Body: { "ids": [...] } con tutti e soli gli ID dei passi della missione, nel nuovo ordine.
+    // 409 se la missione è pubblicata e la nuova sequenza non è valida
+    @PutMapping("/missions/{missionId}/steps/order")
+    public List<MissionStepResponseDTO> reorderSteps(@PathVariable long missionId, @RequestBody @Valid ReorderDTO body) {
+        return missionsService.reorderSteps(missionId, body.ids()).stream().map(MissionStepResponseDTO::from).toList();
+    }
+
+    // Da mostrare prima di pubblicare: i problemi bloccano, gli avvisi no
+    @GetMapping("/missions/{missionId}/readiness")
+    public MissionReadinessDTO checkReadiness(@PathVariable long missionId) {
+        return missionsService.checkReadiness(missionId);
+    }
+
     //STATO: cambi di stato senza body; 409 se la transizione non è ammessa o la missione non è pronta
     @PatchMapping("/missions/{missionId}/publish")
     public MissionResponseDTO publish(@PathVariable long missionId) {
@@ -62,7 +79,7 @@ public class MissionController {
         return MissionResponseDTO.from(missionsService.withdrawMission(missionId));
     }
 
-    // Solo bozze mai pubblicate e senza lezioni, altrimenti 409
+    // Solo bozze mai pubblicate e senza lezioni né esercizi, altrimenti 409
     @DeleteMapping("/missions/{missionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long missionId) {

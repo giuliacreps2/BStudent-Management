@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.services.exercises;
 
+import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.entities.exercises.Question;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionAnswer;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
@@ -13,6 +14,7 @@ import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryListItemDTO;
+import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryUsagesDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryVersionInfo;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionVersionDTO.AnswerDTO;
@@ -137,21 +139,35 @@ public class QuestionBankService implements IQuestionBankService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public QuestionBankEntryUsagesDTO findUsages(long questionBankEntryId) {
+        findById(questionBankEntryId);
+        List<QuestionBankEntryUsagesDTO.MissionUsage> missions = missionExercisesRepository
+                .findByEntryWithMission(questionBankEntryId).stream()
+                .map(MissionExercise::getMission)
+                .map(mission -> new QuestionBankEntryUsagesDTO.MissionUsage(
+                        mission.getMissionId(), mission.getMissionTitle(), mission.getStatus(),
+                        mission.getCourse().getCourseId(), mission.getCourse().getCourseTitle(),
+                        missionExercisesRepository.countOtherVisible(
+                                mission.getMissionId(), questionBankEntryId) == 0))
+                .toList();
+        boolean inPractice = practiceExercisesRepository.existsByQuestionBankEntry_QuestionBankEntryIdAndStatus(
+                questionBankEntryId, ContentStatus.published);
+        return new QuestionBankEntryUsagesDTO(missions, inPractice);
+    }
+
+    @Override
     @Transactional
     public QuestionBankEntry withdrawQuestionBankEntry(long questionBankEntryId) {
         QuestionBankEntry entry = findById(questionBankEntryId);
         if (entry.getStatus() != ContentStatus.published) {
             throw new ConflictException("Si può ritirare solo un esercizio pubblicato");
         }
-        // Una lezione o una voce di Palestra pubblicata resterebbe senza esercizio svolgibile
-        if (missionExercisesRepository.existsByQuestionBankEntry_QuestionBankEntryIdAndLesson_Status(
-                questionBankEntryId, ContentStatus.published)) {
-            throw new ConflictException("L'esercizio è collegato a una lezione pubblicata: ritira prima la lezione");
-        }
-        if (practiceExercisesRepository.existsByQuestionBankEntry_QuestionBankEntryIdAndStatus(
-                questionBankEntryId, ContentStatus.published)) {
-            throw new ConflictException("L'esercizio è pubblicato in Palestra: ritiralo prima dalla Palestra");
-        }
+        // Sempre ammesso, anche se usato in missioni pubblicate o in Palestra: deve essere rapido.
+        // Sparisce da entrambe; l'Admin vede prima dove è usato (findUsages) e il frontend avvisa
+        // per le missioni che resterebbero senza esercizi
+        // TODO (Blocco 4): la Palestra dello studente deve nascondere le voci con esercizio ritirato
+        // TODO (Blocco 5): tentativi già avviati su un esercizio ritirato
         entry.setStatus(ContentStatus.withdrawn);
         entry.setWithdrawnAt(OffsetDateTime.now());
         return entry;

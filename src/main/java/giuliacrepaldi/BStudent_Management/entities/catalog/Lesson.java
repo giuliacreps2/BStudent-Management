@@ -4,7 +4,6 @@ import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -19,10 +18,9 @@ import java.time.OffsetDateTime;
 @Builder
 
 @Entity
+// L'ordine della lezione nella missione è quello del suo passo (MissionStep, v0.8)
 @Table(name = "lessons", uniqueConstraints = {
-        // DEFERRABLE nel DB: il riordino lo rimanda al COMMIT con SET CONSTRAINTS
-        @UniqueConstraint(name = "lessons_mission_id_sort_order_idx", columnNames = {"mission_id", "sort_order"}),
-        // Target della FK composta (lesson_id, mission_id) di mission_exercises: deve restare non deferrable
+        // Target della FK composta (lesson_id, mission_id) di mission_steps: deve restare non deferrable
         @UniqueConstraint(name = "lessons_lesson_id_mission_id_idx", columnNames = {"lesson_id", "mission_id"})
 })
 public class Lesson {
@@ -34,10 +32,6 @@ public class Lesson {
     @NotBlank
     @Column(name = "title", nullable = false, columnDefinition = "TEXT")
     private String lessonTitle;
-
-    @Positive
-    @Column(name = "sort_order", nullable = false)
-    private int lessonSortOrder;
 
     @NotNull
     @Builder.Default

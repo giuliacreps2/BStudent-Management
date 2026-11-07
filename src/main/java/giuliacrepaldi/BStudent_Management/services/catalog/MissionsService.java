@@ -2,15 +2,16 @@ package giuliacrepaldi.BStudent_Management.services.catalog;
 
 import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
+import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionDTO;
-import giuliacrepaldi.BStudent_Management.repositories.catalog.LessonsRepository;
+import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionReadinessDTO;
+import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionStepsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.MissionExerciseSkillsRepository;
-import giuliacrepaldi.BStudent_Management.repositories.exercises.MissionExercisesRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionVersionsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ICoursesService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
@@ -32,23 +33,21 @@ public class MissionsService implements IMissionsService {
 
     private static final BigDecimal FULL_WEIGHT = BigDecimal.valueOf(100);
     private static final String SORT_ORDER_CONSTRAINT = "missions_course_id_sort_order_idx";
+    private static final String STEP_ORDER_CONSTRAINT = "mission_steps_mission_id_sort_order_idx";
 
     private final MissionsRepository missionsRepository;
-    private final LessonsRepository lessonsRepository;
-    private final MissionExercisesRepository missionExercisesRepository;
+    private final MissionStepsRepository missionStepsRepository;
     private final MissionExerciseSkillsRepository missionExerciseSkillsRepository;
     private final QuestionVersionsRepository questionVersionsRepository;
     private final ICoursesService coursesService;
     private final EntityManager entityManager;
 
-    public MissionsService(MissionsRepository missionsRepository, LessonsRepository lessonsRepository,
-                           MissionExercisesRepository missionExercisesRepository,
+    public MissionsService(MissionsRepository missionsRepository, MissionStepsRepository missionStepsRepository,
                            MissionExerciseSkillsRepository missionExerciseSkillsRepository,
                            QuestionVersionsRepository questionVersionsRepository,
                            ICoursesService coursesService, EntityManager entityManager) {
         this.missionsRepository = missionsRepository;
-        this.lessonsRepository = lessonsRepository;
-        this.missionExercisesRepository = missionExercisesRepository;
+        this.missionStepsRepository = missionStepsRepository;
         this.missionExerciseSkillsRepository = missionExerciseSkillsRepository;
         this.questionVersionsRepository = questionVersionsRepository;
         this.coursesService = coursesService;
@@ -110,6 +109,48 @@ public class MissionsService implements IMissionsService {
         return reordered;
     }
 
+    //SEQUENZA
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MissionStep> findSteps(long missionId) {
+        findById(missionId);
+        return missionStepsRepository.findByMissionOrdered(missionId);
+    }
+
+    @Override
+    @Transactional
+    public List<MissionStep> reorderSteps(long missionId, List<Long> stepIds) {
+        Mission mission = findById(missionId);
+        Map<Long, MissionStep> byId = missionStepsRepository.findByMissionOrdered(missionId).stream()
+                .collect(Collectors.toMap(MissionStep::getMissionStepId, Function.identity()));
+        Reorders.validateIds(stepIds, byId.keySet(), "i passi della missione");
+        Reorders.deferUniqueOrder(entityManager, STEP_ORDER_CONSTRAINT);
+
+        List<MissionStep> reordered = new ArrayList<>(stepIds.size());
+        for (int i = 0; i < stepIds.size(); i++) {
+            MissionStep step = byId.get(stepIds.get(i));
+            step.setStepSortOrder(i + 1);
+            reordered.add(step);
+        }
+        assertValidSequence(mission, reordered);
+        return reordered;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MissionReadinessDTO checkReadiness(long missionId) {
+        return readiness(findById(missionId));
+    }
+
+    @Override
+    @Transactional
+    public void assertSequenceStillValid(Mission mission) {
+        assertValidSequence(mission, missionStepsRepository.findByMissionOrdered(mission.getMissionId()));
+    }
+
+    //STATO
+
     @Override
     @Transactional
     public Mission publishMission(long missionId) {
@@ -117,9 +158,16 @@ public class MissionsService implements IMissionsService {
         if (mission.getStatus() == ContentStatus.published) {
             throw new ConflictException("La missione è già pubblicata");
         }
-        List<String> problems = readinessProblems(mission);
+        // Gli avvisi non bloccano: l'Admin li legge da checkReadiness prima di pubblicare
+        List<String> problems = readiness(mission).problems();
         if (!problems.isEmpty()) {
             throw new ConflictException("La missione non è pronta: " + String.join("; ", problems));
+        }
+        // Gli esercizi in bozza escono con la missione (quelli ritirati nel banco restano nascosti)
+        for (MissionStep step : missionStepsRepository.findByMissionOrdered(missionId)) {
+            if (step.isExercise() && !isWithdrawnExercise(step)) {
+                step.getMissionExercise().setStatus(ContentStatus.published);
+            }
         }
         mission.setStatus(ContentStatus.published);
         // published_at è la prima pubblicazione: resta anche dopo un ritiro e un ripristino
@@ -156,51 +204,117 @@ public class MissionsService implements IMissionsService {
         if (mission.getStatus() != ContentStatus.draft || mission.getPublishedAt() != null) {
             throw new ConflictException("Una missione già pubblicata non si elimina: va ritirata");
         }
-        if (lessonsRepository.existsByMission_MissionId(missionId)) {
-            throw new ConflictException("La missione ha delle lezioni: eliminale prima");
+        if (missionStepsRepository.existsByMission_MissionId(missionId)) {
+            throw new ConflictException("La missione ha lezioni o esercizi: eliminali prima");
         }
         // Il buco nell'ordine (es. 1, 3) non viola il vincolo: si sistema con il riordino
         missionsRepository.delete(mission);
     }
 
-    // Controllo "missione pronta": lo studente vede solo lezioni pubblicate, quindi conta solo quelle
-    private List<String> readinessProblems(Mission mission) {
-        Long missionId = mission.getMissionId();
+    // Una missione pubblicata resta coerente per lo studente: ogni modifica alla sequenza
+    // (riordino, esercizi, lezioni pubblicate o ritirate) deve lasciarla valida
+    private static void assertValidSequence(Mission mission, List<MissionStep> steps) {
+        if (mission.getStatus() != ContentStatus.published) {
+            return;
+        }
+        List<String> problems = sequenceProblems(visibleSteps(steps, false));
+        if (!problems.isEmpty()) {
+            throw new ConflictException("La missione è pubblicata e la sequenza non sarebbe più valida: "
+                    + String.join("; ", problems));
+        }
+    }
+
+    // Controllo "missione pronta" sulla sequenza che vede (missione pubblicata) o vedrà lo studente.
+    // Missione non pubblicata: gli esercizi in bozza contano, verranno pubblicati con lei
+    private MissionReadinessDTO readiness(Mission mission) {
+        boolean published = mission.getStatus() == ContentStatus.published;
+        List<MissionStep> steps = missionStepsRepository.findByMissionOrdered(mission.getMissionId());
+        List<MissionStep> visible = visibleSteps(steps, !published);
+        List<String> problems = sequenceProblems(visible);
+        List<String> warnings = new ArrayList<>();
+        for (MissionStep step : steps) {
+            if (isWithdrawnExercise(step)) {
+                warnings.add("l'esercizio «" + exerciseTitle(step) + "» è ritirato: lo studente non lo vede");
+            } else if (published && step.isExercise() && step.getMissionExercise().getStatus() == ContentStatus.draft) {
+                warnings.add("l'esercizio «" + exerciseTitle(step) + "» è in bozza: lo studente non lo vede finché non lo pubblichi");
+            }
+        }
+        if (!visible.isEmpty() && !visible.getLast().isExercise()) {
+            warnings.add("la missione finisce con una lezione: di solito si chiude con un esercizio");
+        }
+        for (MissionStep step : visible) {
+            if (step.isExercise()) {
+                problems.addAll(exerciseProblems(step.getMissionExercise()));
+            }
+        }
+        return new MissionReadinessDTO(problems, warnings);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> exerciseProblems(MissionExercise exercise) {
         List<String> problems = new ArrayList<>();
+        String title = "«" + exercise.getQuestionBankEntry().getInternalQuestionTitle() + "»";
+        Long entryId = exercise.getQuestionBankEntry().getQuestionBankEntryId();
 
-        if (!lessonsRepository.existsByMission_MissionIdAndStatus(missionId, ContentStatus.published)) {
-            problems.add("nessuna lezione pubblicata");
-            return problems;
+        if (exercise.getQuestionBankEntry().getStatus() != ContentStatus.published) {
+            problems.add("l'esercizio " + title + " non è pubblicato");
+        } else if (!questionVersionsRepository.existsPublishedVersion(entryId)) {
+            problems.add("l'esercizio " + title + " non ha una versione pubblicata");
         }
 
-        List<String> withoutExercise = lessonsRepository.findTitlesWithoutExercise(missionId, ContentStatus.published);
-        if (!withoutExercise.isEmpty()) {
-            problems.add("lezioni senza esercizio: " + String.join(", ", withoutExercise));
-        }
-
-        boolean subjectHasDefaultSkill = mission.getCourse().getSubject().getDefaultSkill() != null;
-        for (MissionExercise exercise : missionExercisesRepository.findByMissionAndLessonStatus(missionId, ContentStatus.published)) {
-            String lessonTitle = exercise.getLesson().getLessonTitle();
-            Long entryId = exercise.getQuestionBankEntry().getQuestionBankEntryId();
-
-            if (exercise.getQuestionBankEntry().getStatus() != ContentStatus.published) {
-                problems.add("esercizio non pubblicato nella lezione " + lessonTitle);
-            } else if (!questionVersionsRepository.existsPublishedVersion(entryId)) {
-                problems.add("esercizio senza versione pubblicata nella lezione " + lessonTitle);
+        // Pesi espliciti a somma 100, oppure nessun peso e fallback sulla skill predefinita della materia.
+        // TODO (gamification, blueprint §10.3): regole delle skill non ancora chiare; ricontrollare se
+        //  devono bloccare la pubblicazione, il fallback sulla materia e come si calcolano i contributi
+        Long exerciseId = exercise.getMissionExerciseId();
+        if (missionExerciseSkillsRepository.countById_MissionExerciseId(exerciseId) == 0) {
+            if (exercise.getMission().getCourse().getSubject().getDefaultSkill() == null) {
+                problems.add("l'esercizio " + title + " non ha le skill indicate e la materia non ha una skill predefinita");
             }
-
-            // Pesi espliciti a somma 100, oppure nessun peso e fallback sulla skill predefinita della materia
-            Long exerciseId = exercise.getMissionExerciseId();
-            if (missionExerciseSkillsRepository.countById_MissionExerciseId(exerciseId) == 0) {
-                if (!subjectHasDefaultSkill) {
-                    problems.add("pesi skill mancanti nella lezione " + lessonTitle
-                            + " e materia senza skill predefinita");
-                }
-            } else if (missionExerciseSkillsRepository.sumWeights(exerciseId).compareTo(FULL_WEIGHT) != 0) {
-                problems.add("i pesi skill della lezione " + lessonTitle + " non sommano 100");
-            }
+        } else if (missionExerciseSkillsRepository.sumWeights(exerciseId).compareTo(FULL_WEIGHT) != 0) {
+            problems.add("le skill dell'esercizio " + title + " non arrivano al 100%");
         }
         return problems;
+    }
+
+    // Lo studente vede le lezioni pubblicate e gli esercizi pubblicati nella missione e non ritirati nel banco
+    private static List<MissionStep> visibleSteps(List<MissionStep> steps, boolean includeDraftExercises) {
+        return steps.stream()
+                .filter(step -> step.isExercise()
+                        ? !isWithdrawnExercise(step)
+                          && (includeDraftExercises || step.getMissionExercise().getStatus() == ContentStatus.published)
+                        : step.getLesson().getStatus() == ContentStatus.published)
+                .toList();
+    }
+
+    private static boolean isWithdrawnExercise(MissionStep step) {
+        return step.isExercise() && step.getMissionExercise().getQuestionBankEntry().getStatus() == ContentStatus.withdrawn;
+    }
+
+    // Regole della sequenza (v0.8): inizia con una lezione, due esercizi non si susseguono,
+    // almeno un esercizio. Due lezioni di seguito sono ammesse
+    private static List<String> sequenceProblems(List<MissionStep> visible) {
+        List<String> problems = new ArrayList<>();
+        if (visible.stream().allMatch(MissionStep::isExercise)) {
+            problems.add("nessuna lezione pubblicata");
+        } else if (visible.getFirst().isExercise()) {
+            problems.add("la missione deve iniziare con una lezione, ora inizia con l'esercizio «"
+                    + exerciseTitle(visible.getFirst()) + "»");
+        }
+        for (int i = 1; i < visible.size(); i++) {
+            if (visible.get(i - 1).isExercise() && visible.get(i).isExercise()) {
+                problems.add("due esercizi di seguito: «" + exerciseTitle(visible.get(i - 1))
+                        + "» e «" + exerciseTitle(visible.get(i)) + "»");
+            }
+        }
+        if (visible.stream().noneMatch(MissionStep::isExercise)) {
+            problems.add("nessun esercizio");
+        }
+        return problems;
+    }
+
+    private static String exerciseTitle(MissionStep step) {
+        return step.getMissionExercise().getQuestionBankEntry().getInternalQuestionTitle();
     }
 
     private static void applyContent(Mission mission, MissionDTO body) {

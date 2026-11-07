@@ -22,20 +22,16 @@ public class MissionExerciseController {
         this.missionExercisesService = missionExercisesService;
     }
 
-    //ESERCIZIO DELLA LEZIONE: uno per lezione
-    @PostMapping("/lessons/{lessonId}/exercise")
+    //ESERCIZI DELLA MISSIONE: ognuno è un passo della sequenza, in coda al collegamento, nasce in bozza.
+    // Body: { "questionBankEntryId": 5, "skills": [ { "skillId": 1, "weight": 100 } ] }, skills facoltative.
+    // 409 se già usato nella missione o ritirato
+    @PostMapping("/missions/{missionId}/exercises")
     @ResponseStatus(HttpStatus.CREATED)
-    public MissionExerciseResponseDTO assign(@PathVariable long lessonId, @RequestBody @Valid MissionExerciseDTO body) {
-        return MissionExerciseResponseDTO.from(missionExercisesService.assignExercise(lessonId, body));
+    public MissionExerciseResponseDTO assign(@PathVariable long missionId, @RequestBody @Valid MissionExerciseDTO body) {
+        return MissionExerciseResponseDTO.from(missionExercisesService.assignExercise(missionId, body));
     }
 
-    // 404 se la lezione non ha un esercizio collegato
-    @GetMapping("/lessons/{lessonId}/exercise")
-    public MissionExerciseResponseDTO findByLesson(@PathVariable long lessonId) {
-        return MissionExerciseResponseDTO.from(missionExercisesService.findByLesson(lessonId));
-    }
-
-    // Nell'ordine delle lezioni
+    // Nell'ordine della sequenza
     @GetMapping("/missions/{missionId}/exercises")
     public List<MissionExerciseResponseDTO> findByMission(@PathVariable long missionId) {
         return missionExercisesService.findByMission(missionId).stream().map(MissionExerciseResponseDTO::from).toList();
@@ -54,7 +50,14 @@ public class MissionExerciseController {
         return MissionExerciseResponseDTO.from(missionExercisesService.findByIdAndUpdate(missionExerciseId, body));
     }
 
-    // 409 se già svolto o se la lezione è pubblicata
+    // Lo rende visibile allo studente in una missione già pubblicata (altrimenti esce con la missione).
+    // 409 se l'esercizio non è pronto (pubblicato, con versione e skill) o la sequenza non resterebbe valida
+    @PatchMapping("/mission-exercises/{missionExerciseId}/publish")
+    public MissionExerciseResponseDTO publish(@PathVariable long missionExerciseId) {
+        return MissionExerciseResponseDTO.from(missionExercisesService.publishExercise(missionExerciseId));
+    }
+
+    // Toglie anche il passo. 409 se già svolto o se una missione pubblicata resterebbe senza esercizi
     @DeleteMapping("/mission-exercises/{missionExerciseId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remove(@PathVariable long missionExerciseId) {

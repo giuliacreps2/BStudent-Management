@@ -5,12 +5,11 @@ import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 
 import java.time.OffsetDateTime;
 
-// Vista dell'Admin: include stato e date editoriali
+// Vista dell'Admin: include stato e date editoriali. La posizione nella missione è quella del passo (MissionStepResponseDTO)
 public record LessonResponseDTO(
         Long lessonId,
         Long missionId,
         String title,
-        int sortOrder,
         ContentStatus status,
         OffsetDateTime publishedAt,
         OffsetDateTime withdrawnAt,
@@ -22,7 +21,6 @@ public record LessonResponseDTO(
                 lesson.getLessonId(),
                 lesson.getMission().getMissionId(),
                 lesson.getLessonTitle(),
-                lesson.getLessonSortOrder(),
                 lesson.getStatus(),
                 lesson.getPublishedAt(),
                 lesson.getWithdrawnAt(),

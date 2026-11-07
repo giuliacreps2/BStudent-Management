@@ -15,11 +15,11 @@
  * <p>
  * con "riordino"
  * <p>
- * Sono tutte e due le cose: cambi l'ordine, e di conseguenza la numerazione. Ogni missione, lezione e pagina ha un numero sortOrder (1, 2, 3…) che decide in che ordine la vede lo studente. Per le lezioni è anche l'ordine degli esercizi della missione.
+ * Sono tutte e due le cose: cambi l'ordine, e di conseguenza la numerazione. Ogni missione, passo della missione e pagina ha un numero sortOrder (1, 2, 3…) che decide in che ordine la vede lo studente. Dalla v0.8 lezioni ed esercizi della missione sono passi di un'unica sequenza (mission_steps): si riordinano insieme con PUT .../missions/{id}/steps/order.
  * <p>
  * Con il riordino mandi la lista degli ID nel nuovo ordine, e il backend riassegna i numeri da 1 in su:
  * prima:  L1 = 1, L2 = 2, L3 = 3
- * PUT .../lessons/order   { "ids": [3, 1, 2] }
+ * PUT .../steps/order   { "ids": [3, 1, 2] }
  * dopo:   L3 = 1, L1 = 2, L2 = 3
  * Nel frontend è il trascinamento (drag & drop) di un elenco: alla fine si manda l'ordine completo.
  * <p>

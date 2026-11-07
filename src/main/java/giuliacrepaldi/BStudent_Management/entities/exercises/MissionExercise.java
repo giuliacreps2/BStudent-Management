@@ -1,7 +1,7 @@
 package giuliacrepaldi.BStudent_Management.entities.exercises;
 
-import giuliacrepaldi.BStudent_Management.entities.catalog.Lesson;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
+import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +10,6 @@ import lombok.*;
 import org.hibernate.annotations.Check;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,6 +18,7 @@ import java.util.Objects;
 @ToString
 @Builder
 
+// Esercizio della missione, non di una lezione (v0.8): la posizione è quella del suo passo (MissionStep)
 @Entity
 @Table(
         name = "mission_exercises",
@@ -27,7 +27,10 @@ import java.util.Objects;
                         columnNames = {"mission_id", "question_bank_entry_id"}),
                 // Target della FK composta (mission_exercise_id, question_bank_entry_id) di exercise_attempts
                 @UniqueConstraint(name = "uq_mission_exercises_id_entry",
-                        columnNames = {"mission_exercise_id", "question_bank_entry_id"})
+                        columnNames = {"mission_exercise_id", "question_bank_entry_id"}),
+                // Target della FK composta (mission_exercise_id, mission_id) di mission_steps
+                @UniqueConstraint(name = "uq_mission_exercises_id_mission",
+                        columnNames = {"mission_exercise_id", "mission_id"})
         },
         indexes = {
                 @Index(name = "idx_mission_exercises_entry", columnList = "question_bank_entry_id")
@@ -35,29 +38,33 @@ import java.util.Objects;
 )
 @Check(name = "chk_mission_exercises_allowed_duration", constraints = "allowed_duration_ms > 0")
 @Check(name = "chk_mission_exercises_max_points", constraints = "max_points > 0")
+@Check(name = "chk_mission_exercises_status", constraints = "status IN ('draft', 'published')")
 public class MissionExercise {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long missionExerciseId;
 
-    // Ridondante rispetto a lesson.mission: richiesto dalla FK composta (lesson_id, mission_id)
+    // Solo draft o published. Nasce draft: in una missione pubblicata resta nascosto finché l'Admin
+    // non lo pubblica; altrimenti viene pubblicato insieme alla missione
+    @NotNull
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private ContentStatus status = ContentStatus.draft;
+
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mission_id", nullable = false)
     private Mission mission;
 
     @ToString.Exclude
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", nullable = false, unique = true)
-    private Lesson lesson;
-
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_bank_entry_id", nullable = false)
     private QuestionBankEntry questionBankEntry;
 
-    // Valori sempre espliciti: alla creazione il service applica i default di academy_settings
+    // Valori sempre espliciti: alla creazione il service applica i default di academy_settings.
+    // Il tempo parte quando l'esercizio compare allo studente (Blocco 5)
     @Positive
     @Column(nullable = false)
     private long allowedDurationMs;
@@ -66,15 +73,4 @@ public class MissionExercise {
     @DecimalMin(value = "0.00", inclusive = false)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal maxPoints;
-
-    @PrePersist
-    @PreUpdate
-    private void validateLessonBelongsToMission() {
-        if (lesson == null || mission == null) {
-            return;
-        }
-        if (!Objects.equals(lesson.getMission().getMissionId(), mission.getMissionId())) {
-            throw new IllegalStateException("The lesson must belong to the mission of the exercise");
-        }
-    }
 }

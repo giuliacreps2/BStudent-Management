@@ -26,16 +26,10 @@ public class LessonController {
         return LessonResponseDTO.from(lessonsService.saveNewLesson(missionId, body));
     }
 
-    // In ordine, tutti gli stati: è la vista dell'Admin
+    // Nell'ordine della sequenza, tutti gli stati: è la vista dell'Admin. Il riordino è sui passi (MissionController)
     @GetMapping("/missions/{missionId}/lessons")
     public List<LessonResponseDTO> findByMission(@PathVariable long missionId) {
         return lessonsService.findByMission(missionId).stream().map(LessonResponseDTO::from).toList();
-    }
-
-    // Body: { "ids": [...] } con tutti e soli gli ID delle lezioni della missione, nel nuovo ordine
-    @PutMapping("/missions/{missionId}/lessons/order")
-    public List<LessonResponseDTO> reorder(@PathVariable long missionId, @RequestBody @Valid ReorderDTO body) {
-        return lessonsService.reorderLessons(missionId, body.ids()).stream().map(LessonResponseDTO::from).toList();
     }
 
     //LEZIONI
@@ -49,7 +43,8 @@ public class LessonController {
         return LessonResponseDTO.from(lessonsService.findByIdAndUpdate(lessonId, body));
     }
 
-    //STATO: 409 se la transizione non è ammessa, la lezione non ha pagine o non ha l'esercizio collegato
+    //STATO: 409 se la transizione non è ammessa, la lezione non ha pagine o, al ritiro, la sequenza
+    // di una missione pubblicata non resterebbe valida
     @PatchMapping("/lessons/{lessonId}/publish")
     public LessonResponseDTO publish(@PathVariable long lessonId) {
         return LessonResponseDTO.from(lessonsService.publishLesson(lessonId));
@@ -60,7 +55,7 @@ public class LessonController {
         return LessonResponseDTO.from(lessonsService.withdrawLesson(lessonId));
     }
 
-    // Solo bozze mai pubblicate e senza esercizio collegato; le pagine vengono eliminate con la lezione
+    // Solo bozze mai pubblicate; le pagine e il passo vengono eliminati con la lezione
     @DeleteMapping("/lessons/{lessonId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long lessonId) {
