@@ -32,4 +32,18 @@ public interface MissionExerciseSkillsRepository extends JpaRepository<MissionEx
     @Modifying
     @Query("DELETE FROM MissionExerciseSkill s WHERE s.id.missionExerciseId = :id")
     void deleteByMissionExerciseId(@Param("id") Long missionExerciseId);
+
+    // Punti skill massimi della missione per skill, prima del fattore delle missioni: punti dell'esercizio
+    // per la quota della skill, sugli esercizi che lo studente vede. Righe: skill_id, nome, punti
+    @Query(value = """
+            SELECT s.skill_id, s.name, sum(me.max_points * mes.weight / 100)
+              FROM mission_exercise_skills mes
+              JOIN mission_exercises me ON me.mission_exercise_id = mes.mission_exercise_id
+              JOIN question_bank_entries q ON q.question_bank_entry_id = me.question_bank_entry_id
+              JOIN skills s ON s.skill_id = mes.skill_id
+             WHERE me.mission_id = :missionId AND me.status = 'published' AND q.status <> 'withdrawn'
+             GROUP BY s.skill_id, s.name
+             ORDER BY 3 DESC, s.skill_id
+            """, nativeQuery = true)
+    List<Object[]> findMaxSkillPointsByMission(@Param("missionId") Long missionId);
 }

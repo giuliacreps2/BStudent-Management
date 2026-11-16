@@ -1,5 +1,13 @@
 package giuliacrepaldi.BStudent_Management.services.skills.interfaces;
 
+import giuliacrepaldi.BStudent_Management.payloads.gamification.CharacterAdminDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.CharacterAdminResponseDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.CharacterDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.CharacterStageDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.RosterCharacterDTO;
+
+import java.util.List;
+
 /**
  * Personaggi (nome tecnico "skin"): scelta, cambio e gestione Admin
  * (blueprint principale §11.4; Blueprint Gamification §4, §5).
@@ -8,33 +16,40 @@ package giuliacrepaldi.BStudent_Management.services.skills.interfaces;
  * restano "Prossimamente". Quali sono iniziali lo indica l'Admin: il numero non è fisso nel codice (§5.4).
  * Lo stadio è dello studente (IStudentXpService); ogni personaggio ha le sue immagini per ogni stadio.
  *
- * <h2>TODO — metodi da implementare (Fase D)</h2>
- * <pre>
- * List&lt;RosterCharacterDTO&gt; getRoster(long studentId);
- *     // personaggi pubblicati: scelto / disponibile (iniziale) / "Prossimamente" (non iniziale)
- * RosterCharacterDTO chooseCharacter(long studentId, long skinId);
- *     // solo un personaggio iniziale pubblicato, altrimenti BadRequestException; vale per la prima
- *     // scelta e per il cambio; lo stadio mostrato resta quello dello studente
- * CharacterDTO getCurrentCharacter(long studentId);
- *     // nome, motto facoltativo, immagine dello stadio attuale. Studente senza scelta (registrato prima
- *     // di questa regola): il primo personaggio iniziale
- *
- * // Admin
- * Skin save(CharacterAdminDTO body);
- * Skin update(long skinId, CharacterAdminDTO body);
- *     // nome, descrizione, motto, "personaggio iniziale", stato
- * SkinEvolution saveStage(long skinId, CharacterStageDTO body);
- *     // numero dello stadio, nome, immagine (Cloudinary)
- * Skin publish(long skinId);
- *     // solo se ha un'immagine per ogni stadio previsto (Base, I, II nella beta)
- * EvolutionRulesDTO getEvolutionRules();
- * EvolutionRulesDTO updateEvolutionRules(EvolutionRulesDTO body);
- *     // soglie uguali per tutti i personaggi: XP e livello medio minimo per stadio (800 e 3 per il II)
- * </pre>
- * DTO da creare: RosterCharacterDTO, CharacterDTO, CharacterAdminDTO, CharacterStageDTO, EvolutionRulesDTO.
- * Controller: /student/character, /admin/academy/characters.
- * Roadmap (dopo la beta): sblocco degli altri personaggi, evoluzioni proprie di ogni personaggio,
+ * <p>Roadmap (dopo la beta): sblocco degli altri personaggi, evoluzioni proprie di ogni personaggio,
  * personalizzazione dell'aspetto.
  */
 public interface ISkinsService {
+
+    // Personaggi pubblicati: in uso / iniziale / "Prossimamente"
+    List<RosterCharacterDTO> getRoster(long studentId);
+
+    // Solo un personaggio iniziale pubblicato; vale per la prima scelta e per il cambio.
+    // Lo stadio mostrato resta quello dello studente
+    CharacterDTO chooseCharacter(long studentId, long characterId);
+
+    // Personaggio in uso con i suoi stadi. Studente senza scelta: il primo personaggio iniziale.
+    // Nessun personaggio pubblicato: null
+    CharacterDTO getCurrentCharacter(long studentId);
+
+    // Admin
+    List<CharacterAdminResponseDTO> findAll();
+
+    CharacterAdminResponseDTO findById(long characterId);
+
+    CharacterAdminResponseDTO save(CharacterAdminDTO body);
+
+    CharacterAdminResponseDTO update(long characterId, CharacterAdminDTO body);
+
+    // Crea o aggiorna lo stadio: nome e immagine. Lo stadio deve esistere tra le regole degli stadi
+    CharacterAdminResponseDTO saveStage(long characterId, int stageNumber, CharacterStageDTO body);
+
+    // Solo se ha l'immagine di ogni stadio previsto (Base, I, II nella beta)
+    CharacterAdminResponseDTO publish(long characterId);
+
+    // Torna in bozza: possibile solo se nessuno studente lo ha scelto
+    CharacterAdminResponseDTO withdraw(long characterId);
+
+    // Solo in bozza e mai scelto da uno studente
+    void delete(long characterId);
 }

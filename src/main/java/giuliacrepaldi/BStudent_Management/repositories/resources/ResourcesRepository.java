@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.resources;
 
+import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.entities.resources.Resource;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import giuliacrepaldi.BStudent_Management.enums.resources.ResourceCategory;
@@ -26,4 +27,7 @@ public interface ResourcesRepository extends JpaRepository<Resource, Long> {
             """)
     Page<Resource> search(@Param("subjectId") Long subjectId, @Param("category") ResourceCategory category,
                           @Param("status") ContentStatus status, Pageable pageable);
+
+    // Risorsa da ripassare per un argomento: la prima pubblicata (Blueprint Gamification §6.2)
+    Optional<Resource> findFirstByTopic_TopicIdAndStatusOrderByResourceId(Long topicId, ContentStatus status);
 }

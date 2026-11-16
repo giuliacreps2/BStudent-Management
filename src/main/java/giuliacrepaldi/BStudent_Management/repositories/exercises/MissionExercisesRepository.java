@@ -54,4 +54,14 @@ public interface MissionExercisesRepository extends JpaRepository<MissionExercis
                    OR me.mission.status <> giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.published)
             """)
     long countOtherVisible(@Param("missionId") Long missionId, @Param("entryId") Long questionBankEntryId);
+
+    // XP totali del corso: esercizi visibili delle missioni pubblicate
+    @Query("""
+            SELECT COALESCE(SUM(me.maxPoints), 0) FROM MissionExercise me
+            WHERE me.mission.course.courseId = :courseId
+              AND me.mission.status = giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.published
+              AND me.status = giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.published
+              AND me.questionBankEntry.status <> giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.withdrawn
+            """)
+    BigDecimal sumVisibleMaxPointsByCourse(@Param("courseId") Long courseId);
 }

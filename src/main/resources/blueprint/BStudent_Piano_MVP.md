@@ -58,7 +58,7 @@ Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per 
 | # | Lavoro | Modello | Giorni |
 |---|---|---|---:|
 | G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi. **Fatto il 16/11/2026:** `BStudent_Blueprint_Gamification_v0.1.md` | **Fable** con te | 1–2 |
-| G.2 | Migrazione (materia sui crediti skill, vista dei totali), XP dello studente, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite e attività per ottenerle. **In corso (16/11/2026):** fatti migrazione v0.10, calcoli con test, livelli e lucchetto, XP ed evoluzioni, vite, impostazioni di gioco, correzioni ai corsi (difficoltà, classe di riferimento, corso d'ingresso, skill obbligatorie). **Restano:** sfida giornaliera, tris e Serie, cappello e accessori, personaggi | **Fable** | 4–6 |
+| G.2 | Migrazione (materia sui crediti skill, vista dei totali), XP dello studente, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite e attività per ottenerle. **Backend fatto (16/11/2026):** migrazione v0.10, calcoli con test, livelli e lucchetto, XP ed evoluzioni, vite, sfida giornaliera, tris, Serie e pausa, cappello e accessori, personaggi, dati per barra fissa, dashboard e pagina del personaggio, impostazioni di gioco, correzioni ai corsi (difficoltà, classe di riferimento, corso d'ingresso, skill obbligatorie). **Restano:** pagine dell'Admin e dello studente nel frontend; gli eventi dello svolgimento li chiamerà il Blocco 5 | **Fable** | 4–6 |
 | G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 |
 | | **Totale gamification** | | **7–11** |
 
