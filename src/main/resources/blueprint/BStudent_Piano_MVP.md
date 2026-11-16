@@ -57,7 +57,7 @@ Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per 
 
 | # | Lavoro | Modello | Giorni |
 |---|---|---|---:|
-| G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi | **Fable** con te | 1–2 |
+| G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi. **Fatto il 16/11/2026:** `BStudent_Blueprint_Gamification_v0.1.md` | **Fable** con te | 1–2 |
 | G.2 | Migrazione (materia sui crediti skill, vista dei totali), XP dello studente, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite e attività per ottenerle | **Fable** | 4–6 |
 | G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 |
 | | **Totale gamification** | | **7–11** |
@@ -75,8 +75,8 @@ Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per 
 | # | Lavoro | Modello | Giorni |
 |---|---|---|---:|
 | P.1 | Stripe: checkout, abbonamenti, piano famiglia, webhook idempotenti, recesso, sconto beta (branch `feature/billing-development`: modello e accessi già fatti) | **Fable** | 5–7 |
-| P.2 | Pagine di acquisto, richiesta al genitore, area abbonamento | Pro | 1–2 |
-| P.3 | Account e GDPR: esporta e cancella i dati, consenso del genitore, utenti nell'Admin | Pro | 4–6 |
+| P.2 | Pagine di acquisto, richiesta al genitore, area abbonamento. **Da rivedere (16/11/2026, stima compresa):** il percorso dell'adulto non è sviluppato abbastanza; va riprogettato con "Chiedilo a un genitore" e il riepilogo dei risultati (Blueprint Gamification §8-bis) | Pro | 1–2 |
+| P.3 | Account e GDPR: esporta e cancella i dati, consenso del genitore, utenti nell'Admin. **Aggiunto il 16/11/2026 (stima da rivedere):** passo "La tua scuola" dopo la registrazione, con classe obbligatoria, scuola facoltativa e import delle scuole d'Italia (Blueprint Gamification §6.6) | Pro | 4–6 |
 | P.4 | Testi e UX: copy delle pagine, stati vuoti, errori, accessibilità di base | Pro con te | 4–7 |
 | P.5 | Produzione: hosting, variabili d'ambiente, backup automatici, log ed errori, dominio, email | Pro | 4–6 |
 | P.6 | Test automatici dei service con più regole (visibilità, test, svolgimento, punti, Stripe) e revisione di sicurezza | Pro | 3–5 |
@@ -113,13 +113,14 @@ pacchetto intero esce da una sessione invece che da molti passaggi. **Ipotesi da
 
 | Prima di | Decisione |
 |---|---|
-| G.1 | curva dei livelli, soglie, streak e bonus |
+| G.1 | ~~curva dei livelli, soglie, streak e bonus~~ decise il 16/11/2026 |
 | P.1 | prezzi e piani definitivi per la beta |
 | P.3 | revisione legale: profilazione dei minori, informativa, consenso del genitore |
 | dopo il Blocco 5 | motore degli errori: concetto = argomento? (`BStudent_Blueprint_Motore_Errori_v0.1.md`) |
 
 ## Fuori dall'MVP
 
-Motore degli errori (dopo il Blocco 5, ricostruibile dallo storico), correzione con l'AI, classifica,
+Motore degli errori (dopo il Blocco 5, ricostruibile dallo storico), correzione con l'AI, uso dell'AI tra i
+vantaggi dei piani in abbonamento, classifica,
 "Approfondisci" delle Risorse, "Mettiti alla prova", versione da stampare, evoluzioni proprie di ogni
 personaggio, mondo virtuale con scuole e sponsor.

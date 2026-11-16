@@ -143,7 +143,7 @@ Esercizio nella missione:
 - Il corso ha un livello free o premium (default premium); la missione può non indicarlo (eredita dal corso) oppure sovrascriverlo.
 - Decisione del 5 novembre 2026: **ammesse missioni premium anche in corsi free** (lucchetto sulla missione). Lo studente vede il corso pubblicato; il controllo premium è sulla missione.
 - Lezioni ed esercizi della missione ereditano dalla missione. Le voci della Palestra hanno un livello proprio (default premium).
-- **Aperto:** completamento del corso e prima evoluzione quando il corso contiene missioni premium.
+- **Deciso il 16/11/2026** (era aperto): ogni materia ha un corso d'ingresso tutto gratuito, che dà la prima evoluzione a chiunque; "completato" resta "tutte le missioni superate". Vedi Blueprint Gamification (`BStudent_Blueprint_Gamification_v0.1.md`) §8-bis.
 
 ### 5.7 Area Admin e impostazioni dell’Academy (v0.6, v0.7)
 
@@ -455,6 +455,8 @@ Le domande successive che proponevano di accreditare tutte le skill soltanto al 
 - Il fattore skill delle missioni (10%) è nelle impostazioni dell’Academy; ogni contributo conserva il fattore usato. Cambiare i pesi vale per i contributi calcolati da quel momento.
 - Oggi la mancanza di skill (senza skill predefinita della materia) **blocca** la pubblicazione dell’esercizio nella missione e della missione.
 
+**Deciso il 16/11/2026:** senza skill indicate la missione non si pubblica, senza ripiego automatico sulla skill predefinita: vedi Blueprint Gamification (`BStudent_Blueprint_Gamification_v0.1.md`) §8.2.
+
 **TODO (gamification) — da ricontrollare:** le regole delle skill non sono ancora chiare. Quando si sviluppa la progressione vanno riviste: se le skill devono bloccare la pubblicazione, il fallback sulla skill predefinita della materia, il significato dei pesi e il calcolo dei contributi. Lo stesso TODO è nel codice (`IMissionExercisesService`, `MissionsService.exerciseProblems`).
 
 ### 10.4 Corso e prima evoluzione
@@ -482,6 +484,8 @@ Soglie livelli skill, evoluzioni ulteriori e conversioni dei punti evoluzione fu
 - **XP = punti skin** (§10.3): sono il nome mostrato allo studente e fanno crescere il personaggio.
 - **Punti skill:** fanno salire il **livello della skill** (`skill_levels`); il livello della skill **sblocca esercizi più difficili** di quella skill; i punti skill **contribuiscono all’evoluzione della skin**.
 - La "media ponderata" del §9.3 è il risultato dell’esercizio in missione, non una regola di evoluzione: l’evoluzione della skin oltre la prima (§10.4) non era ancora definita.
+
+**Deciso il 16/11/2026:** numeri e regole sono nel Blueprint Gamification (`BStudent_Blueprint_Gamification_v0.1.md`) §1–§4. La proposta qui sotto resta come traccia.
 
 **Proposta (da fissare nel blocco gamification, numeri compresi):**
 
@@ -528,6 +532,8 @@ Le risposte fallite restano consultabili. Gli orari persistiti possono supportar
 - **Aperto (UX):** ordine tra crescita e punti deboli, da scegliere vedendo il prototipo (orientamento: entrambi in evidenza).
 
 ## 11. Accessori, equipaggiamento e aiuti
+
+**Aggiornamento del 16/11/2026:** accessori della beta, nuovo aiuto del cappello (argomento e "In breve" della Risorsa), bonus tolti, personaggi e ricompense: vedi Blueprint Gamification (`BStudent_Blueprint_Gamification_v0.1.md`) §5 e §6.
 
 ### 11.1 Sblocco e riscatto
 
@@ -591,6 +597,8 @@ Aiuti generali riutilizzabili; non è stato richiesto un catalogo di suggeriment
 Esempio: base5/saldo3 → alla ricarica5; base5/saldo7 →7. Dopo evoluzione base7/saldo3 →7; base7/saldo9 →9.
 
 ### 12.2 Attività dedicata
+
+**Superata il 16/11/2026:** l'attività dedicata non si sviluppa. Le vite si ottengono con tre voci della Palestra superate di fila e con la sfida giornaliera: vedi Blueprint Gamification (`BStudent_Blueprint_Gamification_v0.1.md`) §7 e §8.1.
 
 - Separata da esercizi Palestra e Missioni.
 - **Sempre accessibile**, ultima conferma del9 ottobre; non richiede timer attivo o zero vite.
