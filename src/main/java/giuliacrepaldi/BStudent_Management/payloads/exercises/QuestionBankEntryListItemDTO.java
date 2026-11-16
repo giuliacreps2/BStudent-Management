@@ -9,6 +9,8 @@ import java.time.OffsetDateTime;
 public record QuestionBankEntryListItemDTO(
         Long questionBankEntryId,
         String internalTitle,
+        // Titolo per lo studente: null se ancora da scrivere
+        String title,
         ContentStatus status,
         OffsetDateTime publishedAt,
         OffsetDateTime withdrawnAt,
@@ -25,6 +27,7 @@ public record QuestionBankEntryListItemDTO(
         return new QuestionBankEntryListItemDTO(
                 entry.getQuestionBankEntryId(),
                 entry.getInternalQuestionTitle(),
+                entry.getTitle(),
                 entry.getStatus(),
                 entry.getPublishedAt(),
                 entry.getWithdrawnAt(),

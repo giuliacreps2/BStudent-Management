@@ -36,6 +36,8 @@ public class SkillsService implements ISkillsService {
                 .codeSkill(body.code())
                 .skillName(body.name().strip())
                 .skillDescription(blankToNull(body.description()))
+                .icon(blankToNull(body.icon()))
+                .color(blankToNull(body.color()))
                 .build();
         return skillsRepository.save(skill);
     }
@@ -63,6 +65,8 @@ public class SkillsService implements ISkillsService {
         }
         skill.setSkillName(body.name().strip());
         skill.setSkillDescription(blankToNull(body.description()));
+        skill.setIcon(blankToNull(body.icon()));
+        skill.setColor(blankToNull(body.color()));
         return skill;
     }
 

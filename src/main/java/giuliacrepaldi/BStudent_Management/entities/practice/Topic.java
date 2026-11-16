@@ -26,6 +26,10 @@ public class Topic {
     @Column(name = "name", nullable = false, columnDefinition = "TEXT")
     private String topicName;
 
+    // Illustrazione facoltativa nella Palestra; senza, si usa quella della skill (v0.9)
+    @Column(columnDefinition = "TEXT")
+    private String imageReference;
+
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = false)

@@ -3,6 +3,7 @@ package giuliacrepaldi.BStudent_Management.payloads.catalog;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
+import giuliacrepaldi.BStudent_Management.enums.catalog.CourseLevel;
 
 import java.time.OffsetDateTime;
 
@@ -15,6 +16,13 @@ public record CourseResponseDTO(
         String extendedDescription,
         String coverReference,
         AccessTier accessTier,
+        String slug,
+        String tagline,
+        CourseLevel level,
+        OffsetDateTime featuredUntil,
+        String worldTheme,
+        String quote,
+        String quoteAuthor,
         ContentStatus status,
         OffsetDateTime publishedAt,
         OffsetDateTime withdrawnAt,
@@ -30,6 +38,13 @@ public record CourseResponseDTO(
                 course.getCourseDescription(),
                 course.getCourseImage(),
                 course.getAccessTier(),
+                course.getSlug(),
+                course.getTagline(),
+                course.getLevel(),
+                course.getFeaturedUntil(),
+                course.getWorldTheme(),
+                course.getQuote(),
+                course.getQuoteAuthor(),
                 course.getStatus(),
                 course.getPublishedAt(),
                 course.getWithdrawnAt(),

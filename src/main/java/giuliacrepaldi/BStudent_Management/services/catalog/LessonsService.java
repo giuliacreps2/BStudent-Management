@@ -4,6 +4,7 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Lesson;
 import giuliacrepaldi.BStudent_Management.entities.catalog.LessonPage;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
+import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
@@ -13,6 +14,7 @@ import giuliacrepaldi.BStudent_Management.payloads.catalog.LessonPageDTO;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.LessonPagesRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.LessonsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionStepsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.practice.TopicsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ILessonsService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
 import giuliacrepaldi.BStudent_Management.utilities.Reorders;
@@ -35,15 +37,17 @@ public class LessonsService implements ILessonsService {
     private final LessonsRepository lessonsRepository;
     private final LessonPagesRepository lessonPagesRepository;
     private final MissionStepsRepository missionStepsRepository;
+    private final TopicsRepository topicsRepository;
     private final IMissionsService missionsService;
     private final EntityManager entityManager;
 
     public LessonsService(LessonsRepository lessonsRepository, LessonPagesRepository lessonPagesRepository,
-                          MissionStepsRepository missionStepsRepository, IMissionsService missionsService,
-                          EntityManager entityManager) {
+                          MissionStepsRepository missionStepsRepository, TopicsRepository topicsRepository,
+                          IMissionsService missionsService, EntityManager entityManager) {
         this.lessonsRepository = lessonsRepository;
         this.lessonPagesRepository = lessonPagesRepository;
         this.missionStepsRepository = missionStepsRepository;
+        this.topicsRepository = topicsRepository;
         this.missionsService = missionsService;
         this.entityManager = entityManager;
     }
@@ -57,6 +61,7 @@ public class LessonsService implements ILessonsService {
         Lesson lesson = lessonsRepository.save(Lesson.builder()
                 .mission(mission)
                 .lessonTitle(body.title().strip())
+                .topic(findTopic(body.topicId(), mission))
                 .status(ContentStatus.draft)
                 .build());
         // In coda alla sequenza: due creazioni contemporanee sulla stessa missione violano l'unicità -> 409.
@@ -86,7 +91,22 @@ public class LessonsService implements ILessonsService {
         Lesson lesson = findById(lessonId);
         // Ammessa in ogni stato: il Taccuino mostra gli aggiornamenti senza perdere le note (blueprint §14)
         lesson.setLessonTitle(body.title().strip());
+        lesson.setTopic(findTopic(body.topicId(), lesson.getMission()));
         return lesson;
+    }
+
+    // L'argomento deve essere della materia della missione: regola tra tabelle, non nel DB
+    private Topic findTopic(Long topicId, Mission mission) {
+        if (topicId == null) {
+            return null;
+        }
+        Topic topic = topicsRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Argomento " + topicId + " non trovato"));
+        Long subjectId = mission.getCourse().getSubject().getSubjectId();
+        if (!topic.getSubject().getSubjectId().equals(subjectId)) {
+            throw new BadRequestException("L'argomento appartiene a un'altra materia");
+        }
+        return topic;
     }
 
     @Override

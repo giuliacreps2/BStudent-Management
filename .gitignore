@@ -34,3 +34,5 @@ build/
 
 
 env.properties
+# Backup locali del database (contengono dati: mai nel repository)
+db-backups/

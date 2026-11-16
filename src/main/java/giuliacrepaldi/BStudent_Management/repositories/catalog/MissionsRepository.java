@@ -20,6 +20,15 @@ public interface MissionsRepository extends JpaRepository<Mission, Long> {
 
     List<Mission> findByCourse_CourseIdOrderByMissionSortOrder(Long courseId);
 
+    boolean existsByCourse_CourseIdAndSlug(Long courseId, String slug);
+
+    boolean existsByCourse_CourseIdAndSlugAndMissionIdNot(Long courseId, String slug, Long missionId);
+
+    // Prova finale già presente nel corso, esclusa la missione indicata (null alla creazione)
+    @Query("SELECT COUNT(m) > 0 FROM Mission m WHERE m.course.courseId = :courseId AND m.isFinal = true"
+            + " AND (:missionId IS NULL OR m.missionId <> :missionId)")
+    boolean existsOtherFinal(@Param("courseId") Long courseId, @Param("missionId") Long missionId);
+
     // 0 se il corso non ha missioni: la nuova va in coda con max + 1
     @Query("SELECT COALESCE(MAX(m.missionSortOrder), 0) FROM Mission m WHERE m.course.courseId = :courseId")
     int findMaxSortOrder(@Param("courseId") Long courseId);

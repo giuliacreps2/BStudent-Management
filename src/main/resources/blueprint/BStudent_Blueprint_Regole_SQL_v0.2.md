@@ -4,6 +4,8 @@
 
 **Novità della v0.2:** decisioni prese durante lo sviluppo del catalogo Admin e applicate con le migrazioni v0.6, v0.7 e v0.8: stati editoriali, versione pubblicata degli esercizi, freemium, impostazioni dell’Academy, date editoriali e sequenza libera della missione (lezioni ed esercizi in un unico ordine). Le parti della v0.1 superate sono marcate **[Superato in v0.x]** e riassunte nel §16.
 
+**Aggiornamento del 9 novembre 2026 (Blocco 4):** due test per materia, orientamento della Palestra e test di livello del corso, con regole di calcolo e risposte salvate (§8); dati di materie e corsi visti dallo studente, "In evidenza" e "Popolare", landing della materia (§5.8). **14 novembre:** missioni viste dallo studente, briefing della guida e tutorial (§5.9), titolo pubblico dell’esercizio (§6.1), principi di XP, livelli skill ed evoluzione (§10.4-bis), Palestra vista dallo studente (§7.3), Risorse (§7.4), Blog (§14-bis). Sono regole confermate salvo dove è scritto **Proposta**; lo schema relativo è previsto nella migrazione v0.9, non ancora scritta né applicata.
+
 Questo documento raccoglie le regole definite per il modello dei dati e le operazioni. È il riferimento funzionale per scrivere entity, repository, service e API. Non è una dichiarazione che il SQL precedente implementi già ogni regola, né un documento di codice eseguito.
 
 ## 1. Come leggere il blueprint
@@ -26,7 +28,7 @@ Il lavoro prosegue sul codice Java per blocchi. Non occorre riaprire tutta l’i
 | Catalogo | Materie, corsi, missioni con la loro sequenza di lezioni ed esercizi, contenuti disponibili, impostazioni dell’Academy |
 | Esercizi | Identità dei contenuti, versioni, domande, risposte e criteri editoriali |
 | Palestra | Catalogo degli esercizi liberi, argomenti e configurazione skill/punti |
-| Orientamento | Domande standard e associazioni agli esercizi consigliati |
+| Orientamento | Test per materia: orientamento della Palestra (esercizi consigliati) e livello del corso; risultati salvati |
 | Svolgimento | Tentativi, risposte, timer, salvataggi, checkpoint, consegne e giudizi |
 | Progressione | Record, accrediti, totali skill, risultati corsi e prima evoluzione |
 | Gamification | Accessori, equipaggiamento, aiuti, vite e attività per ottenere vite |
@@ -75,7 +77,7 @@ Autorizzazioni: dati personali dello studente accessibili al proprietario; opera
 - Nella v0.1 il percorso è editoriale e ordinato, non personalizzato per studente.
 - Il corso include titolo, descrizione breve, presentazione estesa e copertina facoltativa; l’assenza della copertina può usare un fallback UI.
 - Lezioni testuali e video sono formati possibili; i video non sono condizione per far esistere la v0.1.
-- I contenuti della lezione sono pagine ordinate; ogni pagina contiene esattamente un contenuto: testo, immagine o video. Formato rich text e provider video sono ancora da decidere.
+- I contenuti della lezione sono pagine ordinate; ogni pagina contiene esattamente un contenuto: testo, immagine o video. Formato rich text e provider video sono ancora da decidere. **[Aggiornato il 14/11/2026]** Il formato del testo è a blocchi, uguale per lezioni, Risorse e Blog (§7.4); il provider video resta da decidere.
 - **[Superato in v0.8]** ~~Ogni lezione completa è collegata a un esercizio~~: gli esercizi sono passi della missione, non appartengono a una lezione. Una lezione si pubblica anche senza esercizio.
 - Lo stesso esercizio può essere riutilizzato tra missioni, ma non duplicato nella stessa missione.
 - Il riordino riceve tutti e soli gli ID del contenitore, senza duplicati, e avviene atomicamente (vincoli di ordine `DEFERRABLE`, controllati al COMMIT). Vale per missioni del corso, passi della missione e pagine della lezione.
@@ -83,6 +85,8 @@ Autorizzazioni: dati personali dello studente accessibili al proprietario; opera
 ### 5.2 Ingresso nel corso
 
 Dal documento di dominio precedente: primo ingresso guidato da un personaggio, missione di prova, percorso in ordine nella v0.1. Test di ingresso al corso e percorsi personalizzati erano rimandati. Questo è distinto dal test facoltativo di orientamento della Palestra.
+
+**[Aggiornato il 9/11/2026]** Entra nell’MVP un **test di livello** facoltativo per materia, che consiglia da quale livello di corso partire (§8.2). Non blocca né sblocca nulla: il percorso dentro il corso resta in ordine.
 
 ### 5.3 Ritiro e aggiornamenti
 
@@ -148,6 +152,41 @@ Esercizio nella missione:
 - Impostazioni dell’Academy (riga unica, modificabili): soglia di superamento **60%**, fattore skill delle missioni **10%**, tempo predefinito dell’esercizio **10 minuti**, punti massimi predefiniti **10**. I valori predefiniti vengono copiati nell’esercizio quando lo si collega: cambiarli dopo non riscrive gli esercizi esistenti né lo storico.
 - Le interfacce Admin non usano termini tecnici e confermano visibilmente ogni salvataggio.
 
+### 5.8 Materie e corsi visti dallo studente (decisioni del 9/11/2026, schema v0.9)
+
+Decisioni prese confrontando il mockup del frontend (`types/myCourses.ts`, `types/courseLanding.ts`) con lo schema. La migrazione v0.9 non è ancora scritta né applicata.
+
+- **Materia:** riceve slug unico, tagline, immagine e **stato** (bozza/pubblicata, con data di pubblicazione). Una materia in bozza non si vede. Una materia pubblicata senza corsi pubblicati appare come **"Presto disponibile"**: il backend restituisce questo testo al posto della tagline. Con almeno un corso pubblicato è aperta.
+- **Corso:** riceve slug unico, tagline facoltativa (sottotitolo della pagina del corso) e **livello** (Principiante, Intermedio, Avanzato; vedi §8.2).
+- Numero di tappe e numero di skill del corso si calcolano: missioni visibili e skill distinte degli esercizi visibili, compresa la skill predefinita della materia.
+- **"In evidenza" e "Popolare" sono due cose distinte:**
+  - *In evidenza* lo decide l’Admin, per esempio per un corso appena uscito, e dura fino a una data scelta. **Proposta:** colonna `featured_until`; il corso è in evidenza finché la data non è passata; nel form Admin la durata suggerita è una settimana. Altri criteri da definire.
+  - *Popolare* non lo decide nessuno: si calcola dall’uso reale (per esempio, quanti studenti hanno iniziato il corso negli ultimi 30 giorni, sopra una soglia minima). Regola esatta da definire quando ci saranno i dati del Blocco 5; fino ad allora nessun corso è popolare. È un primo passo verso i consigli personalizzati (TODO nel package-info di `services.orientation`).
+- **Landing pubblica della materia:**
+  - le tappe mostrate sono le prime cinque missioni pubblicate del corso di riferimento; se sono meno di cinque se ne mostrano meno e il titolo si adatta. **Proposta:** corso di riferimento = il corso in evidenza pubblicato più di recente, altrimenti il più popolare, altrimenti il primo corso pubblicato;
+  - i badge della hero (numero di missioni ed esercizi) si calcolano dal corso di riferimento;
+  - testi, video, personaggi, FAQ e invito finale restano statici nel frontend, materia per materia. Le FAQ in futuro potranno nascere dalle domande ricevute via email e dagli altri canali;
+  - recensioni: servono quelle vere. Quelle di esempio non vanno pubblicate (il Codice del consumo vieta le recensioni false); finché non ce ne sono di vere, la sezione resta nascosta.
+- **Ricompense della pagina del corso:** rimandate al blocco gamification (TODO nel package-info di `services.gamification`); fino ad allora lista vuota e sezione nascosta.
+
+### 5.9 Missioni viste dallo studente (decisioni del 14/11/2026, schema v0.9)
+
+Decisioni prese confrontando il mockup (`types/missions.ts`: mappa del corso e pagina della missione) con lo schema.
+
+- **Campi nuovi della missione:** slug unico nel corso (indirizzo della pagina: l’ordine non va bene perché cambia con il riordino), tagline facoltativa, "Cosa imparerai" facoltativo (**Proposta:** massimo 5 frasi brevi), copertina facoltativa.
+- **Prova finale:** casella sulla missione, al massimo una per corso; non è in automatico l’ultima missione, così se ne possono aggiungere altre dopo. **Aperto:** se ha regole proprie.
+- **Mappa del corso:** il corso riceve un **tema del mondo** (oggi `roman-city`, `greek-temple`, `library`) e una citazione facoltativa con autore. Le immagini dei temi stanno nel frontend. L’Admin **non** inserisce coordinate: ogni tema ha nel frontend una serie di posti disegnati sull’illustrazione e le missioni li occupano in ordine. **Aperto:** cosa succede se le missioni sono più dei posti (mappa che scorre o numero massimo di missioni per corso).
+- **Stato sulla mappa** (completata / attuale / bloccata): si calcola dall’ordine: superate = completate, la prima non superata = attuale, le successive = bloccate. Fino al Blocco 5 nessuno ha superato missioni, quindi la prima è attuale e le altre bloccate. Il **lucchetto premium** (§5.6) è un’informazione distinta, da aggiungere al tipo del mockup.
+- **Durata** mostrata = somma dei tempi degli esercizi; la lettura delle lezioni non ha tempo (§9.1). Al posto del "massimo errori" del mockup si mostra la soglia di superamento (60%, §9.3). Le vite mostrate sono quelle dello studente (serve almeno una vita per partire).
+- **Ricompense mostrate sulla missione:** "+N XP", dove gli XP sono i punti skin (§10.3) e N è la somma dei punti massimi degli esercizi; sotto, i punti skill massimi per skill (punti × peso × fattore missioni). L’oggetto ricompensa ("Elmo di Bronzo") è della gamification.
+- **Tappe della missione (stepper):** la sequenza vera (§5.5), lezione ed esercizio con i loro titoli, più un traguardo finale "Ricompensa". Ogni tappa è fatta, attuale o da fare (lo stato arriva dai checkpoint nel Blocco 5). Oltre 7–8 passi lo stepper diventa compatto ("Passo 3 di 10" e pallini). Le quattro tappe fisse del mockup (briefing, sfide, prova finale, ricompensa) sono superate.
+- **Briefing con la guida:** prima di "Inizia", una **guida fissa per materia** (un personaggio, come il consigliere di Clash of Clans) presenta la missione con da 1 a 5 battute brevi scritte dall’autrice nell’Admin, più un video facoltativo (tenuto per l’esperienza d’uso). Il briefing è facoltativo e si può saltare. La guida (nome e immagine) è un dato della materia. Sostituisce la "lettura e video di preparazione" del mockup e realizza l’"ingresso guidato da un personaggio" del §5.2.
+- **Tutorial della prima volta:** spiega come funzionano missioni, vite, tempo e cappello; testo nel frontend, mostrato una sola volta per studente (si salva che l’ha visto).
+- **Contatori in alto:** ⚡ = **vite** (il "+" porta all’attività per ottenere vite, §12.2); 📜 = **cariche dell’aiuto del cappello** (§11.3), senza "+" ma con il tempo che manca alla ricarica. Nell’interfaccia si chiamano con il loro nome. Né vite né aiuti si acquistano.
+- **Classifica:** fuori dall’MVP, sezione nascosta.
+
+**Rappresentazione SQL prevista (v0.9, proposta):** `missions`: `slug`, `tagline`, `cover_reference`, `is_final` (al massimo uno per corso), video del briefing (provider e identificativo, come le pagine della lezione); nuova tabella delle battute del briefing (missione, ordine, testo); `missions_learning_goals` o colonna elenco per "Cosa imparerai"; `courses`: `world_theme`, `quote`, `quote_author`; `subjects`: nome e immagine della guida; `students`: data di visione del tutorial.
+
 ## 6. Esercizi: contenuti e valutazione
 
 ### 6.1 Identità, versioni e riutilizzo
@@ -157,6 +196,8 @@ Esercizio nella missione:
 - I contratti prevedono che un nuovo tentativo risolva la versione disponibile e conservi ciò che sta svolgendo.
 - Conservare versioni usate ed evitare riscritture dello storico è il modello tecnico proposto. **[Aggiornato in v0.6]** Tempo, massimi e pesi dell’esercizio nella missione si possono cambiare anche dopo l’uso: ogni tentativo conserva i propri valori (tempo concesso e configurazione salvati nel tentativo).
 - Le letture editoriali possono includere soluzioni; quelle destinate allo studente non le espongono indiscriminatamente prima della consegna.
+
+**Titolo pubblico (deciso il 14/11/2026, schema v0.9):** l’esercizio del banco ha due titoli: il **titolo interno** (`internal_title`, nome di lavoro per l’autrice) e il **titolo per lo studente** (`title`), mostrato nello stepper, nella Palestra e nello storico. Il titolo per lo studente sta sulla scheda del banco, non sulla versione: si può correggere senza creare una nuova versione, perché non cambia la correzione. È obbligatorio per pubblicare. Nella migrazione gli esercizi esistenti ricevono come titolo il titolo interno. **TODO (dopo l’MVP):** un titolo facoltativo diverso sulla voce della Palestra e sull’esercizio della missione, per adattarlo al contesto; se vuoto vale il titolo del banco. Si aggiunge senza cambiare la struttura (colonna nullable).
 
 **Versione pubblicata (v0.6):**
 
@@ -225,22 +266,89 @@ Più esercizi possono essere salvati contemporaneamente, con una sola bozza per 
 
 La successiva indicazione “Annulla invio” è stata formulata nel contesto Missione: non si estende automaticamente alla Palestra senza specifica.
 
-## 8. Test preliminare di orientamento
+### 7.3 Palestra vista dallo studente (decisioni del 14/11/2026)
 
-- Strumento facoltativo per chi non sa cosa allenare.
-- Distinto per materia, ripetibile liberamente, senza timer.
-- Domande standard e risposte selezionabili; associazioni agli esercizi preimpostate dall’autrice.
-- In base alle scelte seleziona **massimo cinque esercizi disponibili**.
-- Elimina i duplicati; i consigli appartengono alla materia del test.
+Nel frontend la Palestra si chiama **"Esercizi"** (`/my/exercises`). Nella pagina compaiono solo le **voci della Palestra** (`practice_exercises`) con le loro impostazioni: gli identificativi mandati al frontend sono quelli delle voci, non degli esercizi del banco. Gli esercizi delle missioni e i tentativi fatti in missione non compaiono qui.
+
+- **Materia attiva:** in alto nella pagina, modificabile; di default l’ultima usata. Skill, consigli ed elenchi si riferiscono a quella materia (la materia della voce si ricava dall’argomento, §7.1).
+- **Skill:** codice, nome e descrizione arrivano dal backend; il frontend tiene icona e colore per i codici noti, con un aspetto neutro per quelli nuovi. Aggiungere una skill dall’Admin non richiede modifiche al codice.
+- **Elenco delle voci per skill** (`/my/exercises/{skill}`), raggruppate per argomento, con titolo, stato personale, punti e lucchetto. **TODO di UX:** la pagina non esiste nel mockup. Per l’MVP gli esercizi sono pochi: filtri semplici (materia, skill, argomento) senza query dinamiche elaborate.
+- **"Obiettivo di oggi"** e **test di orientamento** convivono: l’obiettivo è la scelta rapida quotidiana (una skill oppure "Sorprendimi" → 3 voci), il test è la diagnosi occasionale, raggiungibile da un link accanto all’obiettivo. Regola dell’obiettivo: prima le voci **da rifare** (sotto il 60%), poi quelle **mai svolte**, poi le altre; "Sorprendimi" usa la skill più debole; le voci bloccate sono escluse. È il primo livello della personalizzazione (TODO nel package-info di `services.orientation`).
+- **Attività da riprendere:** stati *completato* (superato, almeno 60%), *salvato* (bozza, §7.2), *da rifare* (sotto il 60%) e **in correzione** (consegnato alla docente, stato da aggiungere al mockup). Punteggio = contributo (§10.1) sul massimo della voce.
+- **Sfida giornaliera:** versione minima "supera 3 esercizi oggi", calcolata dai tentativi del giorno, **senza premio** finché la gamification non ne decide uno. Conta come completato un esercizio **superato con almeno il 60%** (il 6 scolastico). Contano solo le voci della Palestra, ognuna una volta sola al giorno; il giorno segue l’ora italiana (confermato il 14/11/2026).
+- **Immagine:** l’illustrazione della skill, o dell’argomento se ne ha una; nessuna immagine per singola voce.
+- **Tempo stimato:** campo facoltativo sulla voce ("~5 min"), solo informativo: non è un timer e non cambia la valutazione (§7.2). Se manca non si mostra.
+- **Bonus della skin** ("+5% Grammatica" nel mockup): non previsti dal blueprint, rimandati alla gamification; per ora lista vuota.
+- Personaggio, XP e serie di giorni (streak): gamification e dashboard.
+
+**Rappresentazione SQL prevista (v0.9, proposta):** `topics`: immagine facoltativa; `practice_exercises`: tempo stimato facoltativo in minuti; `skills`: icona e colore restano nel frontend. La materia attiva dello studente si può tenere nel frontend (ultima usata) senza colonna.
+
+### 7.4 Risorse: gli attrezzi della Palestra (decisioni del 14/11/2026)
+
+Le **Risorse** sono strumenti di ripasso (tabelle dei verbi, delle declinazioni, schemi) che la Palestra mette a disposizione: come i pesi in palestra, **non escono dalla Palestra**. Il **Blog** invece è pubblico e fa da fonte citata (§14-bis). Un articolo del Blog può essere collegato a una risorsa, ma sono contenuti distinti.
+
+- **Accesso:** solo studenti con account. Ogni risorsa è **free o premium**, come le voci della Palestra (§5.6). Il mockup oggi le mette pubbliche su `/resources` con elementi SEO: vanno spostate nell’area riservata. Gli elementi SEO restano da studiare nella copia `app/SEO_criteria/resources` del frontend.
+- **Struttura:** materia, categoria, slug, titolo, descrizione, "In breve" (testo breve e mini esempio facoltativo), stato e date editoriali, free/premium, argomento facoltativo. Le parti che si leggono solo intere (varianti della tabella con colonne e righe, approfondimenti a blocchi, esempi) stanno in un campo JSON, la cui forma è controllata dal backend. Ogni sezione della pagina è facoltativa.
+- **Formato a blocchi unico** per il testo di lezioni, Risorse e Blog: titolo, paragrafo, citazione, riquadro, immagine, elenco; nei paragrafi grassetto e corsivo con una sintassi minima. Il Blog aggiunge il blocco "taglio" (§14-bis). Chiude il TODO del formato del testo delle pagine della lezione (§5.1, `LessonPageDTO`); il provider video resta aperto.
+- **Categorie** (oggi Grammatica, Verbi, Traduzione, Vocabolario): elenco fisso, **separato dalle skill**. Le categorie ordinano gli scaffali, le skill danno i punti.
+- **"Vai agli esercizi":** la risorsa ha un **argomento** della Palestra (`topics`); il pulsante apre le voci di quell’argomento e si nasconde se non ce ne sono di pubblicate.
+- **"Approfondisci":** nell’MVP **non è visibile**. Si prepara solo la struttura dei collegamenti (da una risorsa verso altre risorse, articoli del Blog o argomenti), con l’origine di ogni collegamento (scelto dall’autrice oppure calcolato), così che in seguito un algoritmo possa proporre i collegamenti (TODO nel package-info di `services.orientation`).
+- **Pagina principale delle Risorse:**
+  - "Le risorse più usate": come "Popolare" dei corsi, si calcolerà dall’uso; finché non ci sono dati le sceglie l’autrice con una casella e un’icona da un elenco fisso;
+  - "Novità e risorse in evidenza": scelte dall’autrice;
+  - "Non sai da dove iniziare? Percorso consigliato": porta al test di orientamento (§8.1).
+- **Ricerca:** solo tra le Risorse della materia scelta, per titolo e descrizione, ricerca semplice. Niente ricerca nel Blog né sull’intero sito nell’MVP.
+- **Salva nel Quaderno:** il pulsante resta, solo per studenti iscritti, perché uno studente può volersi tenere a portata una tabella. Le Risorse però restano il **libro** della Palestra e il Quaderno sono gli **appunti** (§14): una Risorsa salvata non diventa un contenuto del Quaderno: compare come **segnalibro**, un collegamento alla pagina della Risorsa tenuto a parte dagli appunti.
+- **Idee per dopo l’MVP:** "Mettiti alla prova" (la tabella con alcune caselle nascoste da completare) e versione da stampare.
+
+**Rappresentazione SQL prevista (v0.9, proposta):** tabella `resources` con i campi qui sopra, il JSON del contenuto e le caselle "più usata" (con icona) e "in evidenza"; tabella dei collegamenti `resource_links` (risorsa, tipo e destinazione, ordine, origine `manual`/`automatic`) creata ma senza Admin né lettura nell’MVP.
+
+## 8. Test preliminari: orientamento e livello
+
+**[Aggiornato il 9/11/2026]** I test per materia sono due, entrambi nell’MVP. Hanno in comune queste regole:
+
+- facoltativi, ripetibili liberamente, senza timer;
+- domande standard con risposte a scelta singola, preparate dall’autrice;
+- nessun punto, vita, skin, revisione docente o autovalutazione;
+- **le risposte dello studente vengono salvate** (§8.3);
+- il calcolo del risultato avviene nel backend: il client invia solo le risposte (§3, il server è autoritativo).
+
+L’autrice non prepara le combinazioni di risposte: assegna un segnale a ogni opzione (esercizi consigliati oppure livello) e il risultato nasce da una regola fissa.
+
+### 8.1 Orientamento della Palestra
+
+- Serve a chi non sa cosa allenare. Sta nella sezione Esercizi, che diventerà la Palestra (nel menu dello studente il nome può restare "Esercizi": TODO di UX).
+- Ogni opzione ha zero o più esercizi della Palestra associati, con una priorità positiva.
+- Seleziona **al massimo cinque esercizi disponibili** della materia del test, senza duplicati.
+- **Regola di scelta (confermata il 9/11/2026):** per ogni esercizio si conta quante delle risposte date lo consigliano; prima vengono gli esercizi consigliati da più risposte; a parità, la priorità più bassa fra le sue associazioni scelte; poi l’ID.
 - Lo studente decide liberamente se svolgerli.
-- Nessun punto, vita, skin, revisione docente o autovalutazione nel test.
-- Nessuno storico dei test né persistenza delle risposte studente nella v0.1.
-- Persistono soltanto configurazione, domande, opzioni e associazioni agli esercizi.
-- Tracciamento per personalizzazione rimandato; eventuali click per misurare utilità sono una possibilità, non un requisito.
+- Le traduzioni e il feedback docente riguardano gli esercizi consigliati, non le domande del test.
 
-**Proposte tecniche:** una scelta per domanda; una configurazione per materia; priorità minima fra le associazioni, poi ID a parità. L’ordine numerico è il criterio semplice discusso; obbligatorietà di tutte le risposte e dettaglio degli spareggi non sono decisioni aggiuntive confermate.
+**Aperto:** cosa mostrare quando le risposte non producono nessun esercizio (per esempio, chi risponde bene a tutto): un messaggio del tipo "Sei pronto, scegli tu cosa allenare" oppure alcuni esercizi generici.
 
-Le traduzioni e il feedback docente riguardano gli esercizi consigliati, non le domande di questo test.
+### 8.2 Test di livello del corso
+
+- Sta nella pagina Corsi della materia e consiglia da quale livello partire: Principiante, Intermedio o Avanzato.
+- Ogni opzione ha un livello. Il corso ha un livello (campo previsto in v0.9).
+- **Regola prudente (confermata il 9/11/2026):** il risultato è il **livello più basso fra quelli scelti almeno due volte**. Una sola risposta bassa non abbassa il risultato; due sì. Per chi studia è peggio partire troppo avanti che troppo indietro.
+- **[Superato il 9/11/2026]** ~~Media dei livelli arrotondata~~ (regola del mockup in `LevelTestModal`).
+- Il risultato è un consiglio: lo studente può iniziare qualsiasi corso.
+
+**Proposte tecniche:** se nessun livello si ripete (per esempio tre risposte tutte diverse), vale il più basso fra quelli scelti; il test deve avere almeno tre domande; se la materia non ha corsi pubblicati del livello consigliato, si mostrano tutti i corsi.
+
+### 8.3 Risposte salvate
+
+- **[Superato il 9/11/2026]** ~~Nessuno storico dei test né persistenza delle risposte studente~~: le risposte dei due test si salvano, perché in futuro serviranno a personalizzare i consigli per ogni studente.
+- Ogni svolgimento è un nuovo risultato (storico): studente, test, risposte scelte, risultato calcolato, data.
+- Il risultato salvato è una fotografia: se in seguito l’autrice cambia le associazioni, i risultati passati non vengono ricalcolati.
+- Uso, conservazione e informativa: TODO legale (profilazione di minori), vedi `services/orientation/package-info.java`.
+
+### 8.4 Rappresentazione SQL prevista (v0.9, proposta)
+
+- `orientation_tests` riceve un **tipo** (`exercises` | `course_level`): un test per materia e per tipo, al posto di uno solo per materia.
+- `orientation_options` riceve un **livello** facoltativo, obbligatorio solo nei test `course_level`. Le associazioni agli esercizi (`orientation_recommendations`) valgono solo per i test `exercises`.
+- Nuova tabella dei risultati (nome provvisorio `orientation_results`): studente, test, risposte (`questionId → optionId`), risultato (livello oppure elenco ordinato degli esercizi consigliati), data di creazione.
+- Le opzioni già usate in un risultato salvato non si cancellano fisicamente (stessa logica del §5.4).
 
 ## 9. Missioni: tentativi, timer e checkpoint
 
@@ -367,11 +475,57 @@ Le domande successive che proponevano di accreditare tutte le skill soltanto al 
 
 Soglie livelli skill, evoluzioni ulteriori e conversioni dei punti evoluzione future non vengono fissate da questa eccezione. Il vecchio arrotondamento sempre per difetto a scaglioni 5% non va usato per sostituire la più recente regola del voto mostrato.
 
+### 10.4-bis XP, livelli delle skill ed evoluzione della skin (14/11/2026)
+
+**Principi confermati:**
+
+- **XP = punti skin** (§10.3): sono il nome mostrato allo studente e fanno crescere il personaggio.
+- **Punti skill:** fanno salire il **livello della skill** (`skill_levels`); il livello della skill **sblocca esercizi più difficili** di quella skill; i punti skill **contribuiscono all’evoluzione della skin**.
+- La "media ponderata" del §9.3 è il risultato dell’esercizio in missione, non una regola di evoluzione: l’evoluzione della skin oltre la prima (§10.4) non era ancora definita.
+
+**Proposta (da fissare nel blocco gamification, numeri compresi):**
+
+1. **Livelli della skill:** soglie di punti crescenti in `skill_levels`, con una curva che rallenta (per esempio ogni livello chiede circa 1,5 volte i punti del precedente): i primi livelli arrivano presto, i successivi richiedono costanza. È la curva più usata nei giochi e nelle app di studio.
+2. **Difficoltà degli esercizi:** ogni voce della Palestra riceve un livello di difficoltà. Lo studente vede tutti gli esercizi; quelli sopra "livello della skill + 1" restano bloccati con l’indicazione "Si sblocca al livello N di Grammatica". Il +1 lascia sempre a portata una sfida un po’ più difficile.
+3. **Evoluzione della skin a doppia condizione:** ogni stadio (`skin_evolutions`) richiede **XP sopra una soglia** e **media dei livelli delle skill sopra un minimo**. Si usa la media dei *livelli*, non dei punti, perché i punti delle diverse skill non sono confrontabili (una skill con più esercizi ne accumula di più). La doppia condizione impedisce di evolvere facendo solo missioni o allenando una sola skill. Media semplice; una media ponderata resta possibile se alcune skill devono contare di più.
+4. La prima evoluzione della v0.1 (completamento del primo corso, §10.4) resta una regola a sé.
+
+**Rappresentazione SQL possibile (non nella v0.9):** difficoltà su `practice_exercises`; soglia XP e livello medio minimo su `skin_evolutions`.
+
+### 10.4-ter Skill per materia (deciso il 14/11/2026, schema v0.9)
+
+- **Catalogo unico delle skill** (nome, descrizione, stato). Icona e colore si scelgono nell’Admin da un elenco fisso, così una skill nuova non richiede modifiche al codice del frontend.
+- **Ogni materia sceglie le sue skill**, in un ordine stabilito dall’autrice: per esempio Latino con Grammatica, Lessico, Analisi, Traduzione e Metrica; Greco senza Metrica; Italiano con skill proprie.
+- **Punti e livelli si contano per materia:** "Grammatica · Latino" e "Grammatica · Greco" sono separati. Lo sblocco degli esercizi per livello (§10.4-bis) usa il livello della skill **nella stessa materia**.
+- **Skill nuova:** parte da zero per tutti; i crediti passati non cambiano; cresce solo con gli esercizi a cui viene assegnata. Livelli: **Proposta:** una curva di soglie unica per tutte le skill, con eccezioni possibili per singola skill.
+- **Media dei livelli per l’evoluzione:** una skill entra nella media solo quando è pubblicata nella materia e ha esercizi pubblicati, così la preparazione di una skill nuova non allontana l’evoluzione di nessuno. **Aperto** (blocco gamification): la skin è unica per tutte le materie, quindi va deciso se la media usa tutte le materie o solo la migliore.
+
+**Rappresentazione SQL prevista (v0.9, proposta):** tabella delle skill della materia (materia, skill, ordine); materia su `skill_credit_entries`; icona e colore su `skills`; vista `student_skill_totals` per studente, materia, skill e origine (oggi descritta qui ma non ancora creata nel DB: vedi `StudentSkillTotal.java`).
+
 ### 10.5 “I miei progressi”
 
 Contenuti confermati per Palestra: storico dei tentativi valutati anche sotto60%, date, risposte, percentuali e feedback; record personale; accrediti per esercizio; totali skill; esercizi in revisione distinti dai risultati definitivi.
 
 Le risposte fallite restano consultabili. Gli orari persistiti possono supportare analisi future; algoritmi di consiglio sugli orari/errori non diventano obbligatori solo perché il dato è conservato.
+
+**Registro di studio (deciso il 14/11/2026, schema v0.9).** I progressi servono anche agli algoritmi futuri, cioè ai consigli per ogni studente e alle statistiche della piattaforma. L'obiettivo è la memoria a lungo termine: ripetere a intervalli crescenti, tornare alla teoria giusta dopo un errore, alternare gli argomenti. La pagina "I miei progressi" è solo una vista dei dati. Il registro va raccolto da subito, l'algoritmo arriva dopo la beta.
+
+- **Argomento** (`topics`) sull'esercizio del banco e sulla lezione o pagina di lezione, oltre che sulle voci della Palestra e sulle Risorse (§7.4). Serve al collegamento esercizio → argomento → teoria.
+- **Eventi di studio:** una tabella in cui si aggiunge e non si modifica mai. Contiene studente, tipo (pagina di lezione letta, Risorsa aperta, consiglio aperto…), oggetto, data e durata. I tentativi hanno già i loro orari.
+- **MVP:** una sola regola visibile, "hai sbagliato → rileggi la teoria di questo argomento" (livello "Regole" di `services/orientation/package-info.java`). Niente algoritmi e niente pagina di statistiche nell'Admin: per la beta (circa 20 studenti) il riscontro arriva direttamente dalla sviluppatrice.
+- **Privacy:** le statistiche della piattaforma sono aggregate e anonime; i consigli al singolo studente sono profilazione (TODO legale dell'orientamento).
+- **Tempo di studio** = tempo attivo su esercizi e teoria (lezioni, Risorse). Menu, impostazioni e personaggio non contano. Si raccoglie dalla v0.9; mostrarlo allo studente non è obbligatorio nell'MVP. Se si mostra: tono neutro e nessun obiettivo di tempo.
+  - **Esercizi:** durata del tentativo (inizio → consegna), già salvata. Nessun controllo di inattività, perché pensare a una traduzione è studio. Limite: il tempo concesso, se c'è; altrimenti **Proposta:** 60 minuti.
+  - **Teoria:** segnale "sono ancora qui" ogni 30 secondi mentre la pagina è visibile. Si ferma dopo **Proposta:** 10 minuti senza scorrere né toccare la pagina, o quando la scheda è nascosta.
+  - **Media:** minuti per giorno di attività (studente); media anonima tra gli studenti (piattaforma).
+
+**Pagina "I miei progressi" (decisa il 14/11/2026, UI da disegnare):**
+
+- Tre livelli: **barra fissa** in tutta l'area studente (vite, XP e stadio, sfida del giorno, materia attiva) → **home** "cosa faccio ora" (continua la missione, obiettivo di oggi, rileggi questo) → **Progressi** "com'è andato il mio percorso".
+- In Progressi tutti e cinque i gruppi: crescita (XP, evoluzione, livelli skill, accessori vicini), corsi, Palestra, storico, punti deboli. Ogni gruppo è una scheda con un riassunto e il dettaglio si apre con un clic.
+- Personaggio e XP sopra, uguali per tutte le materie; sotto, il selettore della materia, visibile solo con più materie.
+- Storico: elenco per data, ultimi 30 giorni con il resto a richiesta, filtri Palestra/missioni e superati sì/no. Il clic apre risposte, feedback e "rileggi la teoria".
+- **Aperto (UX):** ordine tra crescita e punti deboli, da scegliere vedendo il prototipo (orientamento: entrambi in evidenza).
 
 ## 11. Accessori, equipaggiamento e aiuti
 
@@ -409,6 +563,17 @@ Le risposte fallite restano consultabili. Gli orari persistiti possono supportar
 Aiuti generali riutilizzabili; non è stato richiesto un catalogo di suggerimenti specifici per ogni domanda. La carica non viene consumata una seconda volta perché il client ripete la richiesta.
 
 **Proposte tecniche:** cariche iniziali complete al primo riscatto; un beneficio per accessorio nel modello v0.1. Disattivazione/modifiche di accessori già posseduti da gestire nella relativa implementazione.
+
+### 11.4 Personaggio visto dallo studente (decisioni del 14/11/2026)
+
+- **Nomi:** nell’interfaccia si usano solo "Personaggio", "Evoluzioni" e "Accessori". "Skin" resta il nome tecnico (`skins`, `skin_evolutions`) e non compare allo studente. I "punti skin" sono gli XP del personaggio.
+- **Aspetto** (capelli, abiti, colori, varianti d’abito del mockup): **fuori dall’MVP**. Ogni combinazione andrebbe disegnata.
+- **Accessori dello studente:** chi cambia personaggio li conserva. Stati: bloccato (con l’indicazione della soglia), riscattabile, posseduto, indossato (§11.1).
+- **Soglia degli accessori con le skill per materia (§10.4-ter):** basta raggiungere i punti in **una materia qualsiasi** (es. 50 in Grammatica di Latino oppure di Greco).
+- **Personaggi:** alla registrazione si sceglie uno dei personaggi iniziali e si può cambiare liberamente tra quelli. Gli altri restano "Prossimamente" finché la gamification non decide come si sbloccano. Il "cambio di personaggio" della prima evoluzione (§10.4) significa che **il personaggio evolve**, non che se ne ottiene uno nuovo.
+- **XP dello studente:** un contatore unico. Tutti i personaggi mostrano lo stesso stadio e cambiare personaggio non fa perdere nulla. Ogni personaggio ha comunque le sue immagini per ogni stadio.
+- **Dopo la beta (roadmap):** evoluzioni proprie di ogni personaggio, con XP separati (TODO in `services/gamification/package-info.java`).
+- Motto del personaggio: campo facoltativo (v0.9). Bonus del personaggio: non previsti (TODO della gamification).
 
 ## 12. Vite e attività per ottenere vite
 
@@ -469,7 +634,29 @@ Esempio: base5/saldo3 → alla ricarica5; base5/saldo7 →7. Dopo evoluzione bas
 - Dal documento precedente: filtri materia/corso/missione ed elenco recente, senza ricerca avanzata.
 - Il suggerimento Taccuino dopo due fallimenti era previsto come consiglio, non blocco ai ritentativi; posizionamento/contatore da riconciliare in implementazione.
 
-**Proposte tecniche:** unico riquadro note per lezione, autosalvataggio, versione per evitare sovrascritture concorrenti. **Non deciso:** cosa conservare delle note dopo il ritiro del contenuto e trattamento dei preferiti relativi a un post non disponibile.
+**Proposte tecniche:** unico riquadro note per lezione, autosalvataggio, versione per evitare sovrascritture concorrenti.
+
+**Deciso il 14/11/2026** (prima "non deciso"):
+- **Lezione ritirata:** la lezione sparisce, la **nota dello studente resta** visibile da sola con la scritta "lezione non più disponibile".
+- **Articolo del Blog non più disponibile:** sparisce dal Quaderno, come la lezione ritirata.
+- **Abbonamento premium scaduto:** le lezioni premium già nel Quaderno mostrano titolo, anteprima e note dello studente; la lezione completa ha il lucchetto premium.
+
+**Decisioni del 14/11/2026 (mappa del mockup):**
+
+- **Nome:** "Quaderno" in tutta l'interfaccia ("Taccuino" in questo documento e `notebook` nel codice indicano la stessa cosa).
+- **Il Quaderno sono gli appunti, non il libro.** Contiene le lezioni delle missioni, comprese quelle video, con la nota personale e gli articoli del Blog preferiti. Le Risorse sono il libro della Palestra: una Risorsa salvata compare solo come **segnalibro** (§7.4), un collegamento in una striscia separata dagli appunti. Serve una tabella delle Risorse salvate (v0.9).
+- **Voci nel mockup:** tipo = Lezione, Video o Articolo, più l'argomento (§10.5); anteprima ricavata dal primo paragrafo, o dalla descrizione per il Blog; "Nuovo" = entrata e mai riaperta (dagli eventi di studio); data inviata dal backend e formattata dal frontend; icona se la lezione ha una nota.
+- **Personalizzazione dello studente, non dell'Admin:** nell'MVP lo studente sceglie il colore della copertina da una piccola tavolozza. Dopo la beta: adesivi, colori delle linguette, nome del quaderno.
+
+## 14-bis. Blog (decisioni del 14/11/2026)
+
+- **Pubblico e citabile:** le ricerche avvengono sempre più tramite AI, che mostra i contenuti come fonte citata. Il Blog è la parte pubblica di BStudent che deve essere citata; le Risorse restano nella Palestra (§7.4).
+- **Lettura parziale, come Docsity:** la prima parte dell’articolo è aperta e **risponde alla domanda**; da un punto in poi serve l’account per continuare (metodo, esempi svolti, errori frequenti, collegamento agli esercizi).
+- **Punto di taglio:** un blocco "taglio" messo dall’autrice nell’editor a blocchi (§7.4). **Proposta:** se manca, taglio automatico dopo i primi 3 blocchi.
+- **Google vede solo la parte aperta:** la parte chiusa non viene inviata a chi non ha l’account, nemmeno ai motori di ricerca. È semplice, evita i rischi di penalizzazione e impedisce ai riassunti AI di usare la parte chiusa.
+- Il messaggio del taglio non ripete le regole sui minori: le gestisce già la registrazione.
+- **Dentro l’MVP**, con al massimo 5 articoli all’uscita. Il traffico della beta arriva da passaparola e social, non da Google. **Tema aperto:** i canali per trovare studenti (docenti e scuole, social con la guida della materia, passaparola e piano famiglia).
+- I preferiti del Blog nel Taccuino restano come da §14.
 
 ## 15. Invarianti trasversali e metodi
 
@@ -508,6 +695,17 @@ Le interfacce raccolte coprono Catalogo, Esercizi, Palestra, Orientamento, Gamif
 | Contenuto ritirato resta nel Taccuino | Ritirato anche dal Taccuino |
 | Recupero solo a zero/durante attesa | Attività sempre accessibile |
 | Test orientamento con storico/correzione docente | Domande standard, consigli, nessuno storico o revisione |
+| Orientamento senza storico delle risposte | Risposte e risultato salvati per ogni svolgimento (9/11/2026, §8.3) |
+| Un solo test per materia (orientamento) | Due test per materia: orientamento della Palestra e livello del corso (9/11/2026, §8) |
+| Livello consigliato = media arrotondata (mockup) | Livello più basso scelto almeno due volte (9/11/2026, §8.2) |
+| Priorità minima fra le associazioni, poi ID | Prima gli esercizi consigliati da più risposte, poi priorità, poi ID (9/11/2026, §8.1) |
+| Stepper della missione con 4 tappe fisse (mockup) | Sequenza vera di lezioni ed esercizi più traguardo "Ricompensa" (14/11/2026, §5.9) |
+| Lettura e video di preparazione (mockup) | Briefing della guida fissa della materia, con video facoltativo (14/11/2026, §5.9) |
+| "Massimo errori" della missione (mockup) | Soglia di superamento 60% per esercizio (§9.3, §5.9) |
+| Posizione x,y della missione inserita dall’Admin (mockup) | Posti predefiniti per tema del mondo, occupati in ordine (14/11/2026, §5.9) |
+| Esercizio con solo titolo interno | Titolo interno + titolo per lo studente (14/11/2026, §6.1) |
+| Risorse pubbliche con SEO (mockup) | Risorse solo con account, free/premium, dentro la Palestra; il Blog è la parte pubblica (14/11/2026, §7.4, §14-bis) |
+| Formato del testo delle pagine da decidere | Formato a blocchi unico per lezioni, Risorse e Blog (14/11/2026, §7.4) |
 | Stati Bozza/Pubblicato/Ritirato non confermati | Confermati (v0.6, §5.4) |
 | Ogni lezione completa collegata a un esercizio | Sequenza libera: l’esercizio è un passo della missione; lezione pubblicabile senza esercizio (v0.8) |
 | Esercizio della lezione (`mission_exercises.lesson_id`) | Esercizio della missione, posizione nel suo passo (`mission_steps`, v0.8) |
@@ -614,7 +812,7 @@ I vincoli sotto descrivono la bozza salvata; non attestano che tutte le regole d
 | `notebook_lessons` | Acquisizione unica per studente/lezione |
 | `lesson_notes` | Nota privata della lezione acquisita; testo non vuoto e versione positiva |
 | `blog_post_favorites` | Preferito unico per studente/post, riferimento Blog da integrare |
-| `orientation_tests` | Un test per materia nella rappresentazione proposta |
+| `orientation_tests` | Un test per materia nella rappresentazione proposta (v0.9: uno per materia e per tipo, §8.4) |
 | `orientation_questions` | Domande ordinate del test, ordine unico |
 | `orientation_options` | Opzioni ordinate della domanda, ordine unico |
 | `orientation_recommendations` | Associazione opzione–esercizio Palestra unica, priorità positiva |

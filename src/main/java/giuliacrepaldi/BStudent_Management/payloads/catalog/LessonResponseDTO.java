@@ -10,6 +10,7 @@ public record LessonResponseDTO(
         Long lessonId,
         Long missionId,
         String title,
+        Long topicId,
         ContentStatus status,
         OffsetDateTime publishedAt,
         OffsetDateTime withdrawnAt,
@@ -21,6 +22,8 @@ public record LessonResponseDTO(
                 lesson.getLessonId(),
                 lesson.getMission().getMissionId(),
                 lesson.getLessonTitle(),
+                // Leggere l'id di un proxy LAZY non lo inizializza
+                lesson.getTopic() == null ? null : lesson.getTopic().getTopicId(),
                 lesson.getStatus(),
                 lesson.getPublishedAt(),
                 lesson.getWithdrawnAt(),

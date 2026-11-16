@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.services.catalog;
 
 import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
+import giuliacrepaldi.BStudent_Management.enums.catalog.SubjectStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.SubjectDTO;
@@ -10,10 +11,12 @@ import giuliacrepaldi.BStudent_Management.repositories.catalog.SubjectsRepositor
 import giuliacrepaldi.BStudent_Management.repositories.skills.SkillsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ISubjectsService;
 import giuliacrepaldi.BStudent_Management.utilities.Pageables;
+import giuliacrepaldi.BStudent_Management.utilities.Slugs;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 @Service
@@ -40,10 +43,17 @@ public class SubjectsService implements ISubjectsService {
         if (subjectsRepository.existsBySubjectNameIgnoreCase(name)) {
             throw new ConflictException("Esiste già una materia chiamata " + name);
         }
+        String slug = Slugs.resolve(body.slug(), name);
+        if (subjectsRepository.existsBySlug(slug)) {
+            throw new ConflictException("Esiste già una materia con l'indirizzo " + slug);
+        }
         Subject subject = Subject.builder()
                 .subjectName(name)
+                .slug(slug)
+                .status(SubjectStatus.draft)
                 .defaultSkill(findSkill(body.defaultSkillId()))
                 .build();
+        applyContent(subject, body);
         return subjectsRepository.save(subject);
     }
 
@@ -68,10 +78,55 @@ public class SubjectsService implements ISubjectsService {
         if (subjectsRepository.existsBySubjectNameIgnoreCaseAndSubjectIdNot(name, subjectId)) {
             throw new ConflictException("Esiste già una materia chiamata " + name);
         }
+        String slug = Slugs.resolve(body.slug(), name);
+        if (subjectsRepository.existsBySlugAndSubjectIdNot(slug, subjectId)) {
+            throw new ConflictException("Esiste già una materia con l'indirizzo " + slug);
+        }
         subject.setSubjectName(name);
+        subject.setSlug(slug);
+        applyContent(subject, body);
         // Vale per i pesi risolti da ora: i tentativi già svolti conservano i propri contributi
         subject.setDefaultSkill(findSkill(body.defaultSkillId()));
         return subject;
+    }
+
+    @Override
+    @Transactional
+    public Subject publishSubject(long subjectId) {
+        Subject subject = findById(subjectId);
+        if (subject.getStatus() == SubjectStatus.published) {
+            throw new ConflictException("La materia è già pubblicata");
+        }
+        // Nessun requisito sui corsi: senza corsi pubblicati appare come "Presto disponibile"
+        subject.setStatus(SubjectStatus.published);
+        if (subject.getPublishedAt() == null) {
+            subject.setPublishedAt(OffsetDateTime.now());
+        }
+        return subject;
+    }
+
+    @Override
+    @Transactional
+    public Subject unpublishSubject(long subjectId) {
+        Subject subject = findById(subjectId);
+        if (subject.getStatus() == SubjectStatus.draft) {
+            throw new ConflictException("La materia è già nascosta");
+        }
+        // I contenuti restano pubblicati ma non si vedono: lo studente vede un elemento
+        // solo se anche i suoi contenitori sono visibili
+        subject.setStatus(SubjectStatus.draft);
+        return subject;
+    }
+
+    private static void applyContent(Subject subject, SubjectDTO body) {
+        subject.setTagline(blankToNull(body.tagline()));
+        subject.setImageReference(blankToNull(body.imageReference()));
+        subject.setGuideName(blankToNull(body.guideName()));
+        subject.setGuideImageReference(blankToNull(body.guideImageReference()));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     @Override

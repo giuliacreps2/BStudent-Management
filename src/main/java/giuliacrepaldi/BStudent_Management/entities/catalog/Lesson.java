@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.catalog;
 
+import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -57,4 +58,10 @@ public class Lesson {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mission_id", nullable = false)
     private Mission mission;
+
+    // Argomento facoltativo, della stessa materia (v0.9): "rileggi la teoria" e Quaderno (blueprint §10.5, §14)
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 }

@@ -23,6 +23,12 @@
  * dopo:   L3 = 1, L1 = 2, L2 = 3
  * Nel frontend è il trascinamento (drag & drop) di un elenco: alla fine si manda l'ordine completo.
  * <p>
+ * TODO "Popolare" (blueprint §5.8, deciso il 9/11/2026): distinto da "In evidenza", che sceglie l'Admin.
+ * Si calcola dall'uso reale del corso (es. studenti che lo hanno iniziato negli ultimi 30 giorni, sopra
+ * una soglia minima): regola esatta da fissare quando ci saranno i dati del Blocco 5, fino ad allora
+ * isPopular = false. Tenerlo in un punto solo, perché farà parte dei consigli personalizzati
+ * (vedi package-info di services.orientation).
+ * <p>
  * Qui entra in gioco il vincolo DEFERRABLE. Due lezioni della stessa missione non possono avere lo stesso numero. Se aggiorni una riga alla volta, a metà dello scambio L3 è già 1 mentre L1 è ancora 1, e il DB rifiuterebbe la modifica. Con SET CONSTRAINTS ... DEFERRED il controllo avviene solo alla fine, quando i numeri sono di nuovo tutti diversi. Il backend chiede la lista completa proprio per rinumerare tutto in una volta, senza buchi e senza doppioni.
  *
  */

@@ -43,6 +43,16 @@ public class SubjectController {
         return SubjectResponseDTO.from(subjectsService.findByIdAndUpdate(subjectId, body));
     }
 
+    @PatchMapping("/{subjectId}/publish")
+    public SubjectResponseDTO publish(@PathVariable long subjectId) {
+        return SubjectResponseDTO.from(subjectsService.publishSubject(subjectId));
+    }
+
+    @PatchMapping("/{subjectId}/unpublish")
+    public SubjectResponseDTO unpublish(@PathVariable long subjectId) {
+        return SubjectResponseDTO.from(subjectsService.unpublishSubject(subjectId));
+    }
+
     // 409 se la materia ha dei corsi
     @DeleteMapping("/{subjectId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

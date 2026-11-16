@@ -31,6 +31,13 @@ public class Skill {
     @Column(name = "description", columnDefinition = "TEXT")
     private String skillDescription;
 
+    // Icona e colore scelti nell'Admin da un elenco fisso del frontend (v0.9, blueprint §10.4-ter)
+    @Column(columnDefinition = "TEXT")
+    private String icon;
+
+    @Column(columnDefinition = "TEXT")
+    private String color;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 40, nullable = false)

@@ -10,4 +10,8 @@ public interface SubjectsRepository extends JpaRepository<Subject, Long> {
     boolean existsBySubjectNameIgnoreCase(String subjectName);
 
     boolean existsBySubjectNameIgnoreCaseAndSubjectIdNot(String subjectName, Long subjectId);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndSubjectIdNot(String slug, Long subjectId);
 }

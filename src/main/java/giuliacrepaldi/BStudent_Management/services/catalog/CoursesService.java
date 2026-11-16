@@ -11,6 +11,7 @@ import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionsRepositor
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ICoursesService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ISubjectsService;
 import giuliacrepaldi.BStudent_Management.utilities.Pageables;
+import giuliacrepaldi.BStudent_Management.utilities.Slugs;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,17 +39,33 @@ public class CoursesService implements ICoursesService {
         course.setCourseTitle(body.title().strip());
         course.setCourseShortDescription(body.shortDescription().strip());
         course.setCourseDescription(body.extendedDescription().strip());
-        course.setCourseImage(body.coverReference() == null || body.coverReference().isBlank()
-                ? null : body.coverReference().strip());
+        course.setCourseImage(blankToNull(body.coverReference()));
         course.setAccessTier(body.accessTier());
+        course.setTagline(blankToNull(body.tagline()));
+        course.setLevel(body.level());
+        course.setFeaturedUntil(body.featuredUntil());
+        course.setWorldTheme(blankToNull(body.worldTheme()));
+        String quote = blankToNull(body.quote());
+        course.setQuote(quote);
+        // L'autore ha senso solo con la citazione (chk_courses_quote)
+        course.setQuoteAuthor(quote == null ? null : blankToNull(body.quoteAuthor()));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     @Override
     @Transactional
     public Course saveNewCourse(long subjectId, CourseDTO body) {
         Subject subject = subjectsService.findById(subjectId);
+        String slug = Slugs.resolve(body.slug(), body.title());
+        if (coursesRepository.existsBySlug(slug)) {
+            throw new ConflictException("Esiste già un corso con l'indirizzo " + slug);
+        }
         Course course = Course.builder()
                 .subject(subject)
+                .slug(slug)
                 .status(ContentStatus.draft)
                 .build();
         applyContent(course, body);
@@ -81,6 +98,15 @@ public class CoursesService implements ICoursesService {
     @Transactional
     public Course findByIdAndUpdate(long courseId, CourseDTO body) {
         Course course = findById(courseId);
+        String slug = Slugs.resolve(body.slug(), body.title());
+        if (coursesRepository.existsBySlugAndCourseIdNot(slug, courseId)) {
+            throw new ConflictException("Esiste già un corso con l'indirizzo " + slug);
+        }
+        // Un corso pubblicato non torna senza livello: il test di livello lo usa
+        if (course.getStatus() == ContentStatus.published && body.level() == null) {
+            throw new ConflictException("Un corso pubblicato deve avere un livello");
+        }
+        course.setSlug(slug);
         // accessTier è solo il default delle missioni: cambiarlo non tocca quelle con un livello proprio.
         // Ammessa in ogni stato: i contenuti pubblicati mostrano gli aggiornamenti (blueprint §5.3)
         applyContent(course, body);
@@ -93,6 +119,9 @@ public class CoursesService implements ICoursesService {
         Course course = findById(courseId);
         if (course.getStatus() == ContentStatus.published) {
             throw new ConflictException("Il corso è già pubblicato");
+        }
+        if (course.getLevel() == null) {
+            throw new ConflictException("Scegli il livello del corso prima di pubblicarlo");
         }
         // Un corso visibile ma senza missioni pubblicate sarebbe vuoto per lo studente
         if (!missionsRepository.existsByCourse_CourseIdAndStatus(courseId, ContentStatus.published)) {

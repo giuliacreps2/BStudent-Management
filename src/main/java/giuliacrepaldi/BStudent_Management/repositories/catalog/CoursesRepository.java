@@ -12,4 +12,8 @@ public interface CoursesRepository extends JpaRepository<Course, Long> {
     Page<Course> findBySubject_SubjectId(Long subjectId, Pageable pageable);
 
     boolean existsBySubject_SubjectId(Long subjectId);
+
+    boolean existsBySlug(String slug);
+
+    boolean existsBySlugAndCourseIdNot(String slug, Long courseId);
 }

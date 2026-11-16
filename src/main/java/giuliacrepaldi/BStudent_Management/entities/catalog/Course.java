@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.entities.catalog;
 
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
+import giuliacrepaldi.BStudent_Management.enums.catalog.CourseLevel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -42,6 +43,33 @@ public class Course {
 
     @Column(name = "cover_reference", columnDefinition = "TEXT")
     private String courseImage;
+
+    // Indirizzo della pagina, unico (v0.9)
+    @NotBlank
+    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
+    private String slug;
+
+    // Sottotitolo della pagina del corso
+    @Column(columnDefinition = "TEXT")
+    private String tagline;
+
+    // Obbligatorio per pubblicare (test di livello, blueprint §8.2); null nei corsi creati prima della v0.9
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "TEXT")
+    private CourseLevel level;
+
+    // "In evidenza" scelto dall'Admin finché la data non è passata (blueprint §5.8)
+    private OffsetDateTime featuredUntil;
+
+    // Tema della mappa (es. roman-city): illustrazioni e posti delle missioni stanno nel frontend
+    @Column(columnDefinition = "TEXT")
+    private String worldTheme;
+
+    @Column(columnDefinition = "TEXT")
+    private String quote;
+
+    @Column(columnDefinition = "TEXT")
+    private String quoteAuthor;
 
     // Bozza di default: visibile agli studenti solo dopo la pubblicazione
     @NotNull

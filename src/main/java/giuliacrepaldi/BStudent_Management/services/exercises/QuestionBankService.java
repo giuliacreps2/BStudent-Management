@@ -6,6 +6,7 @@ import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionAnswer;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionRubricCriterion;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
+import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
 import giuliacrepaldi.BStudent_Management.enums.attempts.AssessmentMethod;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import giuliacrepaldi.BStudent_Management.enums.exercises.KindQuestion;
@@ -28,6 +29,7 @@ import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionRubricC
 import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionVersionsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.practice.PracticeExercisesRepository;
+import giuliacrepaldi.BStudent_Management.repositories.practice.TopicsRepository;
 import giuliacrepaldi.BStudent_Management.services.exercises.interfaces.IQuestionBankService;
 import giuliacrepaldi.BStudent_Management.utilities.Pageables;
 import org.springframework.data.domain.Page;
@@ -55,6 +57,7 @@ public class QuestionBankService implements IQuestionBankService {
     private final ExerciseAttemptsRepository exerciseAttemptsRepository;
     private final MissionExercisesRepository missionExercisesRepository;
     private final PracticeExercisesRepository practiceExercisesRepository;
+    private final TopicsRepository topicsRepository;
 
     public QuestionBankService(QuestionBankEntriesRepository entriesRepository,
                                QuestionVersionsRepository versionsRepository,
@@ -63,7 +66,8 @@ public class QuestionBankService implements IQuestionBankService {
                                QuestionRubricCriteriaRepository rubricCriteriaRepository,
                                ExerciseAttemptsRepository exerciseAttemptsRepository,
                                MissionExercisesRepository missionExercisesRepository,
-                               PracticeExercisesRepository practiceExercisesRepository) {
+                               PracticeExercisesRepository practiceExercisesRepository,
+                               TopicsRepository topicsRepository) {
         this.entriesRepository = entriesRepository;
         this.versionsRepository = versionsRepository;
         this.questionsRepository = questionsRepository;
@@ -72,6 +76,7 @@ public class QuestionBankService implements IQuestionBankService {
         this.exerciseAttemptsRepository = exerciseAttemptsRepository;
         this.missionExercisesRepository = missionExercisesRepository;
         this.practiceExercisesRepository = practiceExercisesRepository;
+        this.topicsRepository = topicsRepository;
     }
 
     //ESERCIZI
@@ -81,6 +86,8 @@ public class QuestionBankService implements IQuestionBankService {
     public QuestionBankEntry saveNewQuestionBankEntry(QuestionBankEntryDTO body) {
         QuestionBankEntry entry = QuestionBankEntry.builder()
                 .internalQuestionTitle(body.internalTitle().strip())
+                .title(stripOrNull(body.title()))
+                .topic(findTopic(body.topicId()))
                 .status(ContentStatus.draft)
                 .build();
         return entriesRepository.save(entry);
@@ -115,7 +122,15 @@ public class QuestionBankService implements IQuestionBankService {
     @Transactional
     public QuestionBankEntry findByIdAndUpdate(long questionBankEntryId, QuestionBankEntryDTO body) {
         QuestionBankEntry entry = findById(questionBankEntryId);
+        String title = stripOrNull(body.title());
+        // Fuori dalla bozza lo studente lo ha già visto (o lo vede nello storico): non si toglie
+        if (title == null && entry.getStatus() != ContentStatus.draft) {
+            throw new ConflictException("Un esercizio pubblicato o ritirato deve avere il titolo per lo studente");
+        }
         entry.setInternalQuestionTitle(body.internalTitle().strip());
+        // Correggerlo non crea una nuova versione: non cambia la correzione (blueprint §6.1)
+        entry.setTitle(title);
+        entry.setTopic(findTopic(body.topicId()));
         return entry;
     }
 
@@ -128,6 +143,9 @@ public class QuestionBankService implements IQuestionBankService {
         }
         if (!versionsRepository.existsPublishedVersion(questionBankEntryId)) {
             throw new ConflictException("L'esercizio non ha una versione pubblicata");
+        }
+        if (entry.getTitle() == null) {
+            throw new ConflictException("Scrivi il titolo per lo studente prima di pubblicare l'esercizio");
         }
         entry.setStatus(ContentStatus.published);
         // published_at è la prima pubblicazione: resta anche dopo un ritiro e un ripristino
@@ -419,6 +437,18 @@ public class QuestionBankService implements IQuestionBankService {
 
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private static String stripOrNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
+
+    private Topic findTopic(Long topicId) {
+        if (topicId == null) {
+            return null;
+        }
+        return topicsRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Argomento " + topicId + " non trovato"));
     }
 
     // Contenuto già validato e normalizzato

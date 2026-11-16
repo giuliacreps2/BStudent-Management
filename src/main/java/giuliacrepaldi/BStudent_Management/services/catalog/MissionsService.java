@@ -5,6 +5,7 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
+import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionDTO;
@@ -16,6 +17,7 @@ import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionVersion
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ICoursesService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
 import giuliacrepaldi.BStudent_Management.utilities.Reorders;
+import giuliacrepaldi.BStudent_Management.utilities.Slugs;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,9 +60,15 @@ public class MissionsService implements IMissionsService {
     @Transactional
     public Mission saveNewMission(long courseId, MissionDTO body) {
         Course course = coursesService.findById(courseId);
+        String slug = Slugs.resolve(body.slug(), body.title());
+        if (missionsRepository.existsByCourse_CourseIdAndSlug(courseId, slug)) {
+            throw new ConflictException("Il corso ha già una missione con l'indirizzo " + slug);
+        }
+        assertSingleFinal(courseId, null, body.isFinal());
         // In coda: due creazioni contemporanee sullo stesso corso violano l'unicità -> 409
         Mission mission = Mission.builder()
                 .course(course)
+                .slug(slug)
                 .missionSortOrder(missionsRepository.findMaxSortOrder(courseId) + 1)
                 .status(ContentStatus.draft)
                 .build();
@@ -87,6 +95,13 @@ public class MissionsService implements IMissionsService {
     @Transactional
     public Mission findByIdAndUpdate(long missionId, MissionDTO body) {
         Mission mission = findById(missionId);
+        long courseId = mission.getCourse().getCourseId();
+        String slug = Slugs.resolve(body.slug(), body.title());
+        if (missionsRepository.existsByCourse_CourseIdAndSlugAndMissionIdNot(courseId, slug, missionId)) {
+            throw new ConflictException("Il corso ha già una missione con l'indirizzo " + slug);
+        }
+        assertSingleFinal(courseId, missionId, body.isFinal());
+        mission.setSlug(slug);
         // Ammessa in ogni stato: i contenuti pubblicati mostrano gli aggiornamenti (blueprint §5.3)
         applyContent(mission, body);
         return mission;
@@ -322,5 +337,35 @@ public class MissionsService implements IMissionsService {
         mission.setMissionDescription(body.shortDescription().strip());
         // null = eredita dal corso; ammessa anche premium in un corso free
         mission.setAccessTier(body.accessTier());
+        mission.setTagline(blankToNull(body.tagline()));
+        mission.setCoverReference(blankToNull(body.coverReference()));
+        mission.setFinal(body.isFinal());
+        String provider = blankToNull(body.briefingVideoProvider());
+        String identifier = blankToNull(body.briefingVideoIdentifier());
+        if ((provider == null) != (identifier == null)) {
+            throw new BadRequestException("Per il video del briefing servono sia la piattaforma sia il codice del video");
+        }
+        mission.setBriefingVideoProvider(provider);
+        mission.setBriefingVideoIdentifier(identifier);
+        // Sostituite per intero: l'Admin manda sempre l'elenco completo nell'ordine voluto
+        replaceAll(mission.getBriefingLines(), body.briefingLines());
+        replaceAll(mission.getLearningGoals(), body.learningGoals());
+    }
+
+    private void assertSingleFinal(long courseId, Long missionId, boolean isFinal) {
+        if (isFinal && missionsRepository.existsOtherFinal(courseId, missionId)) {
+            throw new ConflictException("Il corso ha già una prova finale: togli prima la casella dall'altra missione");
+        }
+    }
+
+    private static void replaceAll(List<String> target, List<String> values) {
+        target.clear();
+        if (values != null) {
+            values.stream().map(String::strip).forEach(target::add);
+        }
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 }
