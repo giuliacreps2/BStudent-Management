@@ -1,5 +1,7 @@
 package giuliacrepaldi.BStudent_Management.services.catalog;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
+import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
@@ -51,6 +53,32 @@ public class CoursesService implements ICoursesService {
         course.setQuoteAuthor(quote == null ? null : blankToNull(body.quoteAuthor()));
     }
 
+    // Corso d'ingresso (Blueprint Gamification §8-bis): uno per materia, gratuito dall'inizio alla fine.
+    // Dà la prima evoluzione a chiunque, quindi non può contenere nulla a pagamento
+    private void applyEntryCourse(Course course, CourseDTO body) {
+        boolean entry = Boolean.TRUE.equals(body.entryCourse());
+        if (entry) {
+            if (body.accessTier() != AccessTier.free) {
+                throw new BadRequestException("Il corso d'ingresso deve essere gratuito: imposta il corso come gratuito");
+            }
+            Long subjectId = course.getSubject().getSubjectId();
+            coursesRepository.findBySubject_SubjectIdAndEntryCourseTrue(subjectId)
+                    .filter(other -> !other.getCourseId().equals(course.getCourseId()))
+                    .ifPresent(other -> {
+                        throw new ConflictException("La materia ha già un corso d'ingresso: «" + other.getCourseTitle()
+                                + "». Togli prima la spunta da quel corso");
+                    });
+            if (course.getCourseId() != null) {
+                long premium = missionsRepository.countByCourse_CourseIdAndAccessTier(course.getCourseId(), AccessTier.premium);
+                if (premium > 0) {
+                    throw new ConflictException("Il corso ha " + premium + (premium == 1 ? " missione" : " missioni")
+                            + " a pagamento: rendile gratuite prima di farne il corso d'ingresso");
+                }
+            }
+        }
+        course.setEntryCourse(entry);
+    }
+
     private static String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.strip();
     }
@@ -69,6 +97,7 @@ public class CoursesService implements ICoursesService {
                 .status(ContentStatus.draft)
                 .build();
         applyContent(course, body);
+        applyEntryCourse(course, body);
         return coursesRepository.save(course);
     }
 
@@ -110,6 +139,7 @@ public class CoursesService implements ICoursesService {
         // accessTier è solo il default delle missioni: cambiarlo non tocca quelle con un livello proprio.
         // Ammessa in ogni stato: i contenuti pubblicati mostrano gli aggiornamenti (blueprint §5.3)
         applyContent(course, body);
+        applyEntryCourse(course, body);
         return course;
     }
 

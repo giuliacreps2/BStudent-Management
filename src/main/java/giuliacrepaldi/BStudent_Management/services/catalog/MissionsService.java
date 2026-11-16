@@ -78,6 +78,7 @@ public class MissionsService implements IMissionsService {
                 .missionSortOrder(missionsRepository.findMaxSortOrder(courseId) + 1)
                 .status(ContentStatus.draft)
                 .build();
+        assertFreeInEntryCourse(course, body);
         applyContent(mission, body);
         return missionsRepository.save(mission);
     }
@@ -108,6 +109,7 @@ public class MissionsService implements IMissionsService {
         }
         assertSingleFinal(courseId, missionId, body.isFinal());
         mission.setSlug(slug);
+        assertFreeInEntryCourse(mission.getCourse(), body);
         // Ammessa in ogni stato: i contenuti pubblicati mostrano gli aggiornamenti (blueprint §5.3)
         applyContent(mission, body);
         return mission;
@@ -285,14 +287,12 @@ public class MissionsService implements IMissionsService {
             problems.add("l'esercizio " + title + " non ha una versione pubblicata");
         }
 
-        // Pesi espliciti a somma 100, oppure nessun peso e fallback sulla skill predefinita della materia.
-        // TODO (gamification, blueprint §10.3): regole delle skill non ancora chiare; ricontrollare se
-        //  devono bloccare la pubblicazione, il fallback sulla materia e come si calcolano i contributi
+        // Le skill le indica sempre l'autrice, con quote a somma 100: senza skill la missione non si
+        // pubblica, e non c'è più il ripiego sulla skill predefinita della materia
+        // (deciso il 16/11/2026, Blueprint Gamification §8.2)
         Long exerciseId = exercise.getMissionExerciseId();
         if (missionExerciseSkillsRepository.countById_MissionExerciseId(exerciseId) == 0) {
-            if (exercise.getMission().getCourse().getSubject().getDefaultSkill() == null) {
-                problems.add("l'esercizio " + title + " non ha le skill indicate e la materia non ha una skill predefinita");
-            }
+            problems.add("l'esercizio " + title + " non ha le skill indicate: scegli quali skill allena e quanto conta ciascuna");
         } else if (missionExerciseSkillsRepository.sumWeights(exerciseId).compareTo(FULL_WEIGHT) != 0) {
             problems.add("le skill dell'esercizio " + title + " non arrivano al 100%");
         }
@@ -337,6 +337,15 @@ public class MissionsService implements IMissionsService {
 
     private static String exerciseTitle(MissionStep step) {
         return step.getMissionExercise().getQuestionBankEntry().getInternalQuestionTitle();
+    }
+
+    // Il corso d'ingresso è gratuito dall'inizio alla fine: dà la prima evoluzione a chiunque
+    // (Blueprint Gamification §8-bis)
+    private static void assertFreeInEntryCourse(Course course, MissionDTO body) {
+        if (course.isEntryCourse() && body.accessTier() == AccessTier.premium) {
+            throw new BadRequestException("«" + course.getCourseTitle()
+                    + "» è il corso d'ingresso della materia: le sue missioni sono tutte gratuite");
+        }
     }
 
     private static void applyContent(Mission mission, MissionDTO body) {

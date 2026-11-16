@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.services.practice;
 
+import giuliacrepaldi.BStudent_Management.services.gamification.interfaces.ISkillLevelsService;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionBankEntry;
 import giuliacrepaldi.BStudent_Management.entities.practice.PracticeExercise;
 import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
@@ -36,11 +37,14 @@ public class PracticeCatalogService implements IPracticeCatalogService {
     private final IQuestionBankService questionBankService;
     private final ITopicsService topicsService;
     private final ISubjectSkillsService subjectSkillsService;
+    private final ISkillLevelsService skillLevelsService;
 
     public PracticeCatalogService(PracticeExercisesRepository practiceExercisesRepository,
                                   OrientationRecommendationsRepository recommendationsRepository,
                                   SkillsRepository skillsRepository, IQuestionBankService questionBankService,
-                                  ITopicsService topicsService, ISubjectSkillsService subjectSkillsService) {
+                                  ITopicsService topicsService, ISubjectSkillsService subjectSkillsService,
+                                  ISkillLevelsService skillLevelsService) {
+        this.skillLevelsService = skillLevelsService;
         this.practiceExercisesRepository = practiceExercisesRepository;
         this.recommendationsRepository = recommendationsRepository;
         this.skillsRepository = skillsRepository;
@@ -154,5 +158,13 @@ public class PracticeCatalogService implements IPracticeCatalogService {
         exercise.setMaxPoints(body.maxPoints());
         exercise.setEstimatedMinutes(body.estimatedMinutes() == null ? null : body.estimatedMinutes().shortValue());
         exercise.setAccessTier(body.accessTier());
+        // Una difficoltà oltre l'ultimo livello non si sbloccherebbe mai (Blueprint Gamification §3)
+        int difficulty = body.difficulty() == null ? 1 : body.difficulty();
+        int maxLevel = skillLevelsService.getMaxLevel(skill.getSkillId());
+        if (difficulty > maxLevel) {
+            throw new BadRequestException("La difficoltà va da 1 a " + maxLevel + ": " + skill.getSkillName()
+                    + " ha " + maxLevel + " livelli. Per andare oltre aggiungi prima un livello alla skill");
+        }
+        exercise.setDifficulty(difficulty);
     }
 }

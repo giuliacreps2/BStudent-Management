@@ -27,4 +27,22 @@ public class GamificationSetting {
     @Positive
     @Column(nullable = false)
     private int lifeRechargeHours;
+
+    // Voci della Palestra da superare nel giorno per la sfida giornaliera (v0.10, Blueprint Gamification §7.1)
+    @Positive
+    @Builder.Default
+    @Column(nullable = false)
+    private int dailyChallengeTarget = 3;
+
+    // Voci superate di fila per ottenere una vita (§8.1)
+    @Positive
+    @Builder.Default
+    @Column(nullable = false)
+    private int practiceStreakForLife = 3;
+
+    // Errori di fila dopo i quali la Palestra propone la pausa (§8.1-bis)
+    @Positive
+    @Builder.Default
+    @Column(nullable = false)
+    private int practiceFailsForPause = 3;
 }

@@ -100,6 +100,12 @@ public class Course {
     @Column(nullable = false, columnDefinition = "TEXT")
     private AccessTier accessTier = AccessTier.premium;
 
+    // Corso d'ingresso della materia: gratuito dall'inizio alla fine, dà la prima evoluzione a chiunque.
+    // Al massimo uno per materia (indice unico parziale nel DB; v0.10, Blueprint Gamification §8-bis)
+    @Builder.Default
+    @Column(name = "is_entry_course", nullable = false)
+    private boolean entryCourse = false;
+
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id", nullable = false)

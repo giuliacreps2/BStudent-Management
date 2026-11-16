@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.catalog;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,9 @@ public interface MissionsRepository extends JpaRepository<Mission, Long> {
     long countByCourse_CourseIdAndStatus(Long courseId, ContentStatus status);
 
     List<Mission> findByCourse_CourseIdOrderByMissionSortOrder(Long courseId);
+
+    // Missioni con un livello di accesso proprio (es. premium in un corso free)
+    long countByCourse_CourseIdAndAccessTier(Long courseId, AccessTier accessTier);
 
     boolean existsByCourse_CourseIdAndSlug(Long courseId, String slug);
 

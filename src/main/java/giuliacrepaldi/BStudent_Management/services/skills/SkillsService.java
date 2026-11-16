@@ -1,5 +1,8 @@
 package giuliacrepaldi.BStudent_Management.services.skills;
 
+import giuliacrepaldi.BStudent_Management.entities.skills.SkillLevel;
+import giuliacrepaldi.BStudent_Management.repositories.skills.SkillLevelsRepository;
+import giuliacrepaldi.BStudent_Management.utilities.GameRules;
 import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
@@ -20,9 +23,11 @@ public class SkillsService implements ISkillsService {
     private static final Set<String> SORTS = Set.of("skillId", "codeSkill", "skillName");
 
     private final SkillsRepository skillsRepository;
+    private final SkillLevelsRepository skillLevelsRepository;
 
-    public SkillsService(SkillsRepository skillsRepository) {
+    public SkillsService(SkillsRepository skillsRepository, SkillLevelsRepository skillLevelsRepository) {
         this.skillsRepository = skillsRepository;
+        this.skillLevelsRepository = skillLevelsRepository;
     }
 
     @Override
@@ -39,7 +44,13 @@ public class SkillsService implements ISkillsService {
                 .icon(blankToNull(body.icon()))
                 .color(blankToNull(body.color()))
                 .build();
-        return skillsRepository.save(skill);
+        Skill saved = skillsRepository.save(skill);
+        // Una skill nuova parte con la curva dei livelli della beta (Blueprint Gamification §2.2)
+        for (int i = 0; i < GameRules.DEFAULT_LEVEL_CURVE.size(); i++) {
+            skillLevelsRepository.save(SkillLevel.builder()
+                    .skill(saved).levelNumber(i + 1).minPoints(GameRules.DEFAULT_LEVEL_CURVE.get(i)).build());
+        }
+        return saved;
     }
 
     @Override
@@ -77,6 +88,8 @@ public class SkillsService implements ISkillsService {
         if (skillsRepository.isInUse(skillId)) {
             throw new ConflictException("La skill è usata (pesi, materie, Palestra, accessori o progressi): non si elimina");
         }
+        // I livelli sono impostazioni della skill, non un uso: si eliminano con lei
+        skillLevelsRepository.deleteBySkillId(skillId);
         skillsRepository.delete(skill);
     }
 

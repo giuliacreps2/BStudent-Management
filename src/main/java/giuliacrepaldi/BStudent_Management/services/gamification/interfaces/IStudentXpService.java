@@ -1,5 +1,12 @@
 package giuliacrepaldi.BStudent_Management.services.gamification.interfaces;
 
+import giuliacrepaldi.BStudent_Management.entities.skills.EvolutionStageRule;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.EvolutionProgressDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.EvolutionStageRuleDTO;
+
+import java.math.BigDecimal;
+import java.util.List;
+
 /**
  * XP dello studente ed evoluzioni del personaggio (Blueprint Gamification §1, §4).
  * XP = somma dei punti massimi degli esercizi della missione, accreditati solo al primo superamento.
@@ -7,34 +14,35 @@ package giuliacrepaldi.BStudent_Management.services.gamification.interfaces;
  * (800 XP e livello medio almeno 3 nella materia migliore). Uno stadio raggiunto non si perde mai.
  * XP e stadio sono dello studente: tutti i personaggi mostrano lo stesso stadio.
  *
- * <h2>TODO — metodi da implementare (Fase D)</h2>
- * <pre>
- * BigDecimal getTotalXp(long studentId);
- *     // somma di student_xp_entries
- * EvolutionProgressDTO getEvolutionProgress(long studentId);
- *     // stadio attuale, prossimo stadio e che cosa manca (XP mancanti, livello medio attuale e richiesto);
- *     // dopo l'ultimo stadio: nessun "prossimo"
- * // Calcolo puro, coperto dai test:
- * static boolean meetsStage(BigDecimal xp, BigDecimal bestAverageLevel, BigDecimal minXp, BigDecimal minAverageLevel);
- *     // entrambe le condizioni, media non arrotondata: 2,8 non vale 3 (§4.3)
- *
- * // Eventi in arrivo dal Blocco 5 (svolgimento): contratto, restano TODO finché il Blocco 5 non esiste
- * void onMissionPassed(long studentId, long missionId, long missionAttemptId);
- *     // primo superamento: scrive una riga in student_xp_entries (XP = somma dei punti massimi degli
- *     // esercizi visibili in quel momento); ripetizioni e doppio invio: nessun effetto (UNIQUE studente +
- *     // missione). Poi chiama evaluateEvolutions
- * void onSkillPointsCredited(long studentId);
- *     // dopo ogni accredito di punti skill (Palestra o missione): chiama evaluateEvolutions
- * void onCourseCompleted(long studentId, long courseId);
- *     // primo corso completato: Evoluzione I una sola volta (student_first_evolutions),
- *     // poi ILivesService.raiseBaseLives e evaluateEvolutions
- * List&lt;Integer&gt; evaluateEvolutions(long studentId);
- *     // assegna in ordine gli stadi con soglia di cui lo studente ha i requisiti e restituisce quelli nuovi
- *     // (per il messaggio "Il tuo personaggio si è evoluto"); l'Evoluzione II richiede la I (§4.4)
- * </pre>
- * Fatti letti: student_xp_entries, student_evolution_stages, student_first_evolutions, soglie degli stadi,
- * ISkillLevelsService.getBestAverageLevel.
- * DTO da creare: EvolutionProgressDTO. Entity da creare: StudentXpEntry, StudentEvolutionStage.
+ * <p>I metodi on... sono gli eventi che il Blocco 5 (svolgimento) deve chiamare: oggi nessuno li chiama.
+ * Restituiscono gli stadi nuovi, così il frontend mostra "Il tuo personaggio si è evoluto" (§8b.5).
  */
 public interface IStudentXpService {
+
+    BigDecimal getTotalXp(long studentId);
+
+    // 0 = Base
+    int getCurrentStage(long studentId);
+
+    EvolutionProgressDTO getEvolutionProgress(long studentId);
+
+    // Primo superamento della missione: accredita gli XP (somma dei punti massimi degli esercizi visibili in
+    // quel momento). Ripetizioni e doppio invio: nessun effetto. Poi valuta le evoluzioni
+    List<Integer> onMissionPassed(long studentId, long missionId, long missionAttemptId);
+
+    // Dopo ogni accredito di punti skill (Palestra o missione)
+    List<Integer> onSkillPointsCredited(long studentId);
+
+    // Primo corso completato: Evoluzione I una sola volta e base delle vite a 7
+    List<Integer> onCourseCompleted(long studentId, long courseId);
+
+    // Assegna in ordine gli stadi con soglie di cui lo studente ha i requisiti (§4.4)
+    List<Integer> evaluateEvolutions(long studentId);
+
+    // Admin: regole degli stadi, uguali per tutti i personaggi
+    List<EvolutionStageRule> findRules();
+
+    // Solo gli stadi con soglie (XP e livello medio). Abbassarle non toglie nulla a nessuno; alzarle vale
+    // per chi non ha ancora raggiunto lo stadio (§4.5)
+    EvolutionStageRule updateRule(int stageNumber, EvolutionStageRuleDTO body);
 }

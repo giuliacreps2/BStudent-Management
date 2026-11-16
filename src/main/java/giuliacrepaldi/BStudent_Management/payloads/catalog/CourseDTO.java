@@ -27,5 +27,7 @@ public record CourseDTO(
         @Size(max = 60) @Pattern(regexp = "^[a-z0-9]+(-[a-z0-9]+)*$", message = "Tema del mondo non valido")
         String worldTheme,
         @Size(max = 500) String quote,
-        @Size(max = 150) String quoteAuthor) {
+        @Size(max = 150) String quoteAuthor,
+        // Facoltativo (false se manca): corso d'ingresso della materia, gratuito dall'inizio alla fine
+        Boolean entryCourse) {
 }

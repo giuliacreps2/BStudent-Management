@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.exercises;
 
+import java.math.BigDecimal;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +24,16 @@ public interface MissionExercisesRepository extends JpaRepository<MissionExercis
     List<MissionExercise> findByMissionOrdered(@Param("missionId") Long missionId);
 
     boolean existsByQuestionBankEntry_QuestionBankEntryId(Long questionBankEntryId);
+
+    // XP della missione = somma dei punti massimi degli esercizi che lo studente vede
+    // (pubblicati nella missione e non ritirati nel banco; Blueprint Gamification §1.1)
+    @Query("""
+            SELECT COALESCE(SUM(me.maxPoints), 0) FROM MissionExercise me
+            WHERE me.mission.missionId = :missionId
+              AND me.status = giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.published
+              AND me.questionBankEntry.status <> giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.withdrawn
+            """)
+    BigDecimal sumVisibleMaxPoints(@Param("missionId") Long missionId);
 
     // Missioni in cui l'esercizio è usato, con missione e corso già caricati
     @Query("""

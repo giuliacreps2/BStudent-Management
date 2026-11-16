@@ -20,6 +20,11 @@ public final class GameRules {
     private GameRules() {
     }
 
+    // Curva della beta, uguale per tutte le skill: ogni passo chiede circa 1,5 volte il precedente (§2.2).
+    // È il punto di partenza di una skill nuova; poi le soglie si cambiano dall'Admin
+    public static final List<BigDecimal> DEFAULT_LEVEL_CURVE = List.of(BigDecimal.ZERO, BigDecimal.valueOf(20),
+            BigDecimal.valueOf(50), BigDecimal.valueOf(95), BigDecimal.valueOf(165), BigDecimal.valueOf(265));
+
     // ------------------------------------------------------------------ Livelli delle skill (§2)
 
     // Stato di una skill: nextMinPoints è null al livello massimo, e allora la barra è piena

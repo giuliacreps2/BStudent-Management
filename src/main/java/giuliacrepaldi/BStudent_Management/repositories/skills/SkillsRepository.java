@@ -12,6 +12,7 @@ public interface SkillsRepository extends JpaRepository<Skill, Long> {
     boolean existsByCodeSkill(String codeSkill);
 
     // Tutte le tabelle con una FK verso skills: se una la usa, la skill non si cancella.
+    // Esclusi i livelli (skill_levels): ogni skill li ha dalla creazione e si eliminano con lei.
     // Da aggiornare se una nuova tabella punta a skills
     @Query(value = """
             SELECT EXISTS (SELECT 1 FROM mission_exercise_skills WHERE skill_id = :id)
@@ -19,7 +20,6 @@ public interface SkillsRepository extends JpaRepository<Skill, Long> {
                 OR EXISTS (SELECT 1 FROM subject_skills WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM practice_exercises WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM accessories WHERE skill_id = :id)
-                OR EXISTS (SELECT 1 FROM skill_levels WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM mission_skill_contributions WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM practice_records WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM skill_credit_entries WHERE skill_id = :id)

@@ -36,6 +36,13 @@ public class PracticeExercise {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal maxPoints;
 
+    // Difficoltà sulla scala dei livelli della skill: la voce è aperta fino a "livello + 1"
+    // (v0.10, Blueprint Gamification §3)
+    @Positive
+    @Builder.Default
+    @Column(nullable = false)
+    private int difficulty = 1;
+
     // Tempo stimato in minuti, solo informativo: non è un timer e non cambia la valutazione (v0.9, §7.3)
     @Positive
     @Column(name = "estimated_minutes")

@@ -38,7 +38,13 @@ public class TopicsService implements ITopicsService {
                 .subject(subject)
                 .topicName(name)
                 .imageReference(blankToNull(body.imageReference()))
+                .referenceYear(toShort(body.referenceYear()))
                 .build());
+    }
+
+    // Classe di riferimento: anno di scuola superiore, null = per tutti (Blueprint Gamification §3-bis)
+    private static Short toShort(Integer value) {
+        return value == null ? null : value.shortValue();
     }
 
     @Override
@@ -67,6 +73,7 @@ public class TopicsService implements ITopicsService {
         }
         topic.setTopicName(name);
         topic.setImageReference(blankToNull(body.imageReference()));
+        topic.setReferenceYear(toShort(body.referenceYear()));
         return topic;
     }
 

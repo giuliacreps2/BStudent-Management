@@ -35,4 +35,14 @@ public class Skin {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 40, nullable = false)
     private StatusSkill statusSkin = StatusSkill.draft;
+
+    // Personaggio iniziale: si sceglie alla registrazione e si cambia liberamente. Gli altri pubblicati
+    // compaiono come "Prossimamente" (v0.10, Blueprint Gamification §5)
+    @Builder.Default
+    @Column(name = "is_starter", nullable = false)
+    private boolean starter = false;
+
+    // Motto facoltativo mostrato nella pagina del personaggio
+    @Column(columnDefinition = "TEXT")
+    private String motto;
 }

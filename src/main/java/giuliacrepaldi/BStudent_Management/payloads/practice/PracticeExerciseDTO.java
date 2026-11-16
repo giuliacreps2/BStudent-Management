@@ -17,5 +17,7 @@ public record PracticeExerciseDTO(
         @NotNull @DecimalMin(value = "0.00", inclusive = false) @DecimalMax("9999.99") BigDecimal maxPoints,
         // Facoltativo, solo informativo ("~5 min")
         @Positive @Max(240) Integer estimatedMinutes,
-        @NotNull AccessTier accessTier) {
+        @NotNull AccessTier accessTier,
+        // Facoltativa (1 se manca): scala dei livelli della skill. La voce è aperta fino a "livello + 1"
+        @Positive @Max(30) Integer difficulty) {
 }

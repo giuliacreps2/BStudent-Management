@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.progression;
 
+import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.entities.identity.Student;
 import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
 import giuliacrepaldi.BStudent_Management.enums.progression.SourceKind;
@@ -78,6 +79,13 @@ public class SkillCreditEntry {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_id", nullable = false)
     private Skill skill;
+
+    // Punti e livelli si contano per materia (blueprint §10.4-ter). Facoltativa nel DB (v0.10) per non
+    // rompere gli altri branch; chi registra un accredito la compila sempre
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
     @PrePersist
     @PreUpdate

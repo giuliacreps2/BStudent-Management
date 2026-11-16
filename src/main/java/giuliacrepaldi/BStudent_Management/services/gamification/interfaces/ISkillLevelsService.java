@@ -1,5 +1,15 @@
 package giuliacrepaldi.BStudent_Management.services.gamification.interfaces;
 
+import giuliacrepaldi.BStudent_Management.entities.skills.SkillLevel;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.PracticeLockDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.SkillLevelStateDTO;
+import giuliacrepaldi.BStudent_Management.payloads.gamification.SkillLevelsDTO;
+
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Livelli delle skill e sblocco delle voci della Palestra (Blueprint Gamification §2, §3).
  * Il livello si calcola dai punti dello studente in una skill e in una materia (Palestra + missioni):
@@ -8,50 +18,55 @@ package giuliacrepaldi.BStudent_Management.services.gamification.interfaces;
  * Una sola scala di difficoltà in tutta la piattaforma (§3.6).
  * Livello di partenza dal test di orientamento (§2.6): vale come punti di partenza pari alla soglia del
  * livello, usati solo per il livello; per gli accessori contano i punti veri.
- * Programma (§3-bis): la classe di riferimento dell'argomento non blocca, dà solo un avviso.
+ * I calcoli stanno in utilities.GameRules (coperti dai test); qui si leggono i fatti dalla vista
+ * student_subject_skill_totals sopra skill_credit_entries.
  *
- * <h2>TODO — metodi da implementare (Fase D)</h2>
+ * <h2>TODO</h2>
  * <pre>
- * // Calcolo puro, senza DB (utilities.SkillLevelCurve): è la parte coperta dai test.
- * static int levelFor(BigDecimal points, List&lt;BigDecimal&gt; thresholds);
- *     // 0 -&gt; 1; 19,99 -&gt; 1; 20 -&gt; 2; 60 -&gt; 3; 265 e oltre -&gt; 6
- * static boolean isUnlocked(int difficulty, int skillLevel);
- *     // difficulty &lt;= skillLevel + 1
- *
- * List&lt;SkillLevelStateDTO&gt; getLevels(long studentId, long subjectId);
- *     // una riga per skill pubblicata nella materia (subject_skills), nell'ordine dell'autrice:
- *     // punti, livello, soglia del livello attuale e del prossimo, percentuale della barra, "livello massimo"
- * SkillLevelStateDTO getLevel(long studentId, long subjectId, long skillId);
- * BigDecimal getAverageLevel(long studentId, long subjectId);
- *     // media semplice, non arrotondata; contano solo le skill pubblicate nella materia e con esercizi
- *     // pubblicati (§4.2). Nessuna skill valida -&gt; 1
- * BigDecimal getBestAverageLevel(long studentId);
- *     // la materia migliore tra quelle in cui lo studente ha punti (§4.2)
- * PracticeLockDTO getLock(long studentId, long practiceExerciseId);
- *     // aperta, oppure bloccata con "Si sblocca al livello N di [skill]" (N = difficoltà - 1).
- *     // Lo usa IStudentPracticeService (branch dei corsi) per l'elenco e prima di avviare un tentativo
- * Map&lt;Long, PracticeLockDTO&gt; getLocks(long studentId, Collection&lt;Long&gt; practiceExerciseIds);
- *     // stesso calcolo per un elenco, con una sola lettura dei totali
- * void setStartingLevel(long studentId, long subjectId, long skillId, int level);
- *     // lo chiama il test di orientamento (branch dei corsi); può solo salire; livello tra 1 e il massimo
  * ProgramNoticeDTO getProgramNotice(long studentId, long practiceExerciseId);
- *     // "per la tua classe" oppure "Di solito si studia in [classe]"; senza classe dello studente o
- *     // dell'argomento: nessun avviso. Le voci "più avanti" restano apribili
- *
- * // Admin
- * List&lt;SkillLevel&gt; findLevels(long skillId);
- * List&lt;SkillLevel&gt; replaceLevels(long skillId, SkillLevelsDTO body);
- *     // soglie crescenti, livello 1 = 0 punti; nel form la scelta "applica a tutte le skill".
- *     // Il livello è calcolato: aggiungere un livello in cima non cambia nulla a nessuno;
- *     // alzare una soglia esistente farebbe scendere chi l'aveva superata, quindi è vietato
- *     // (BadRequestException: "Puoi aggiungere livelli o abbassare le soglie, non alzarle")
+ *     // Programma (§3-bis): "per la tua classe" oppure "Di solito si studia in [classe]". Serve la classe
+ *     // dello studente, che nasce con il lavoro sull'account (Piano MVP, P.3). La classe di riferimento
+ *     // dell'argomento esiste già (topics.reference_year). Le voci "più avanti" restano apribili
  * </pre>
- * Fatti letti: vista student_subject_skill_totals (studente, materia, skill, origine) sopra
- * skill_credit_entries. La vista student_skill_totals, già nel DB, non ha la materia e non si usa.
- * DTO da creare: SkillLevelStateDTO, PracticeLockDTO, SkillLevelsDTO, ProgramNoticeDTO.
- * TODO per il branch dei corsi: campo "Difficoltà" nel form Admin della voce della Palestra
- * (PracticeExerciseDTO) e uso di getLock nelle letture dello studente.
- * Controller: GET /student/skills/levels?subject=; /admin/academy/skills/{id}/levels.
+ * TODO (letture dello studente, IStudentPracticeService): usare getLocks nell'elenco delle voci e getLock
+ * prima di avviare un tentativo.
  */
 public interface ISkillLevelsService {
+
+    // Una riga per skill della materia, nell'ordine dell'autrice
+    List<SkillLevelStateDTO> getLevels(long studentId, long subjectId);
+
+    // Livello dello studente nella skill della materia (1 se non ha punti né livello di partenza)
+    int getLevel(long studentId, long subjectId, long skillId);
+
+    // Media semplice e non arrotondata dei livelli; contano solo le skill della materia con esercizi
+    // pubblicati (§4.2). Nessuna skill valida: 1
+    BigDecimal getAverageLevel(long studentId, long subjectId);
+
+    // La materia migliore tra quelle in cui lo studente ha punti o un livello di partenza (§4.2)
+    BigDecimal getBestAverageLevel(long studentId);
+
+    // Punti veri nella skill, nella materia migliore: è la misura delle soglie degli accessori (§11.4)
+    BigDecimal getBestPoints(long studentId, long skillId);
+
+    PracticeLockDTO getLock(long studentId, long practiceExerciseId);
+
+    // Stesso calcolo per un elenco, con una sola lettura dei totali
+    Map<Long, PracticeLockDTO> getLocks(long studentId, Collection<Long> practiceExerciseIds);
+
+    // Lo chiama il test di orientamento; può solo salire; livello tra 1 e il massimo della skill
+    void setStartingLevel(long studentId, long subjectId, long skillId, int level);
+
+    // Admin
+    List<SkillLevel> findLevels(long skillId);
+
+    // Soglie crescenti, la prima è 0. Si possono aggiungere livelli o abbassare le soglie, non alzarle né
+    // togliere livelli: chi li aveva raggiunti scenderebbe, e il livello non scende mai (§2.3)
+    List<SkillLevel> replaceLevels(long skillId, SkillLevelsDTO body);
+
+    // Curva della beta per una skill appena creata (§2.2)
+    void createDefaultLevels(long skillId);
+
+    // Numero di livelli della skill: è anche la difficoltà massima di una voce della Palestra
+    int getMaxLevel(long skillId);
 }

@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.catalog;
 
+import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,4 +17,7 @@ public interface CoursesRepository extends JpaRepository<Course, Long> {
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndCourseIdNot(String slug, Long courseId);
+
+    // Corso d'ingresso della materia: al massimo uno (Blueprint Gamification §8-bis)
+    Optional<Course> findBySubject_SubjectIdAndEntryCourseTrue(Long subjectId);
 }
