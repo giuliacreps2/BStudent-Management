@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public record LessonPageDTO(
         // TODO formato deciso il 14/11/2026 (blueprint §7.4): blocchi come gli articoli del Blog (titolo, paragrafo,
         // citazione, riquadro, immagine, elenco; grassetto e corsivo minimi nei paragrafi), uguale per Risorse e Blog.
-        // Da fare: struttura JSON validata dal backend al posto del testo libero e sanificazione al rendering
+        // Da fare (4.4, con l'editor): struttura JSON validata con ContentBlocks.validateBlocks al posto del testo libero
         String formattedText,
         // Identificativo Cloudinary (blueprint §5.1). TODO: caricamento dall'Admin tramite il backend
         @Size(max = 500) String imageReference,

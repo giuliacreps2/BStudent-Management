@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.entities.orientation;
 
+import giuliacrepaldi.BStudent_Management.enums.catalog.CourseLevel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -35,4 +36,9 @@ public class OrientationOption {
     @Positive
     @Column(name = "sort_order", nullable = false)
     private int optionSortOrder;
+
+    // Solo nei test course_level, dove è obbligatorio (regola tra tabelle: nel service)
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "TEXT")
+    private CourseLevel level;
 }

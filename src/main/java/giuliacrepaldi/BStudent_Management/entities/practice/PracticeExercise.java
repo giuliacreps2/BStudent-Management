@@ -7,6 +7,7 @@ import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -34,6 +35,11 @@ public class PracticeExercise {
     @DecimalMin(value = "0.00", inclusive = false)
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal maxPoints;
+
+    // Tempo stimato in minuti, solo informativo: non è un timer e non cambia la valutazione (v0.9, §7.3)
+    @Positive
+    @Column(name = "estimated_minutes")
+    private Short estimatedMinutes;
 
     @NotNull
     @Builder.Default

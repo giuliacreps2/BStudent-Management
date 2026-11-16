@@ -27,17 +27,18 @@ Ogni voce rimanda alla sua interfaccia: lì ci sono i metodi (come TODO) e le re
 - [x] Skill: icona e colore
 - [x] Skill della materia (`subject_skills`): elenco, aggiungi, togli, riordina; i pesi delle missioni e le voci della Palestra usano solo skill della materia → `ISubjectSkillsService`
 - [x] Argomenti (`topics`): crea, modifica (con immagine), elimina se non usati → `ITopicsService`
-- [ ] Voci della Palestra (`practice_exercises`): crea, modifica (skill, argomento, punti massimi, tempo stimato, free/premium), pubblica, ritira — oggi `PracticeCatalogService` è vuoto → `IPracticeCatalogService`
-- [ ] Test (orientamento e livello): test per materia e tipo, domande, opzioni (esercizi consigliati con priorità oppure livello), almeno 3 domande per pubblicare — oggi `OrientationService` è vuoto → `IOrientationService` (parte Admin)
-- [ ] Risorse: crea, modifica, pubblica, ritira; categoria, argomento, free/premium, "più usata" con icona, "in evidenza"; contenuto JSON controllato → `IResourcesService`
-- [ ] Formato a blocchi: validazione JSON comune a pagine della lezione e Risorse, al posto del testo libero (`LessonPageDTO`) → utility `ContentBlocks`, descritta in `IResourcesService`
-- [ ] Entity ancora da mappare: `Student` (tutorial visto, colore del Quaderno), `OrientationTest.kind`, `OrientationOption.level`, `PracticeExercise.estimatedMinutes`; nuove `OrientationResult`, `Resource`, `ResourceLink`, `ResourceBookmark`, `StudyEvent`
+- [x] Voci della Palestra (`practice_exercises`): crea, modifica (skill, argomento, punti massimi, tempo stimato, free/premium), pubblica, ritira → `IPracticeCatalogService`
+- [x] Test (orientamento e livello): test per materia e tipo, domande, opzioni (esercizi consigliati con priorità oppure livello), almeno 3 domande per pubblicare → `IOrientationService` (parte Admin)
+- [x] Risorse: crea, modifica, pubblica, ritira; categoria, argomento, free/premium, "più usata" con icona, "in evidenza"; contenuto JSON controllato → `IResourcesService`
+- [x] Formato a blocchi (utility `ContentBlocks`, con test; il collegamento alle pagine della lezione si fa con l'editor, 4.4): validazione JSON comune a pagine della lezione e Risorse, al posto del testo libero (`LessonPageDTO`) → utility `ContentBlocks`, descritta in `IResourcesService`
+- [x] Entity della parte Admin: `OrientationTest.kind`, `OrientationOption.level`, `PracticeExercise.estimatedMinutes`, `Resource`, `ResourceLink`
+- [ ] Entity della parte studente (Fase 3): `Student` (tutorial visto, colore del Quaderno), `OrientationResult`, `ResourceBookmark`, `StudyEvent`
 
 ## Fase 2 — Frontend Admin (bstudent-academy)
 
 Senza termini tecnici e con un riscontro visibile su ogni salvataggio.
 
-- [ ] Form di materie (con Pubblica/Nascondi), corsi, missioni, esercizi del banco, lezioni, skill: campi nuovi della Fase 1
+- [x] Form di materie (con Pubblica/Nascondi), corsi, missioni, esercizi del banco, lezioni, skill: campi nuovi della Fase 1 (da provare dal browser con l'utente Admin)
 - [ ] Pagine Admin nuove: skill della materia, argomenti, voci della Palestra, test, Risorse (con editor a blocchi)
 
 ## Fase 3 — Backend letture studente

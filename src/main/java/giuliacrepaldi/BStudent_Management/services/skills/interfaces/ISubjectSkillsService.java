@@ -12,8 +12,7 @@ import java.util.List;
  * <p>
  * - La skill predefinita della materia entra da sola tra le sue skill (ISubjectsService) e non si toglie.
  * - Una skill usata da voci della Palestra o da pesi di esercizi delle missioni della materia non si toglie.
- * - assertSkillOfSubject è il controllo unico: lo usano i pesi degli esercizi di missione e
- *   (TODO 4.2) le voci della Palestra.
+ * - assertSkillOfSubject è il controllo unico: lo usano i pesi degli esercizi di missione e le voci della Palestra.
  */
 public interface ISubjectSkillsService {
 
