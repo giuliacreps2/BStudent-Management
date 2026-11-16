@@ -25,8 +25,8 @@ Ogni voce rimanda alla sua interfaccia: lì ci sono i metodi (come TODO) e le re
 - [x] Esercizi del banco: titolo per lo studente (obbligatorio per pubblicare), argomento
 - [x] Lezioni: argomento della stessa materia
 - [x] Skill: icona e colore
-- [ ] Skill della materia (`subject_skills`): elenco, aggiungi, togli, riordina; i pesi delle missioni e le voci della Palestra usano solo skill della materia → `ISubjectSkillsService`
-- [ ] Argomenti (`topics`): crea, modifica (con immagine), elimina se non usati — oggi `TopicsService` è vuoto → `ITopicsService`
+- [x] Skill della materia (`subject_skills`): elenco, aggiungi, togli, riordina; i pesi delle missioni e le voci della Palestra usano solo skill della materia → `ISubjectSkillsService`
+- [x] Argomenti (`topics`): crea, modifica (con immagine), elimina se non usati → `ITopicsService`
 - [ ] Voci della Palestra (`practice_exercises`): crea, modifica (skill, argomento, punti massimi, tempo stimato, free/premium), pubblica, ritira — oggi `PracticeCatalogService` è vuoto → `IPracticeCatalogService`
 - [ ] Test (orientamento e livello): test per materia e tipo, domande, opzioni (esercizi consigliati con priorità oppure livello), almeno 3 domande per pubblicare — oggi `OrientationService` è vuoto → `IOrientationService` (parte Admin)
 - [ ] Risorse: crea, modifica, pubblica, ritira; categoria, argomento, free/premium, "più usata" con icona, "in evidenza"; contenuto JSON controllato → `IResourcesService`
