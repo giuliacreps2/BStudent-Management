@@ -20,6 +20,11 @@ public interface LessonPagesRepository extends JpaRepository<LessonPage, Long> {
     @Query("SELECT COALESCE(MAX(p.lessonPageSortOrder), 0) FROM LessonPage p WHERE p.lesson.lessonId = :lessonId")
     int findMaxSortOrder(@Param("lessonId") Long lessonId);
 
+    // Titoli delle lezioni della missione con almeno una pagina video sulla piattaforma indicata
+    @Query("SELECT DISTINCT p.lesson.lessonTitle FROM LessonPage p WHERE p.lesson.mission.missionId = :missionId"
+            + " AND p.videoProvider = :provider")
+    List<String> findLessonTitlesWithVideoProvider(@Param("missionId") Long missionId, @Param("provider") String provider);
+
     @Modifying
     @Query("DELETE FROM LessonPage p WHERE p.lesson.lessonId = :lessonId")
     void deleteByLessonId(@Param("lessonId") Long lessonId);

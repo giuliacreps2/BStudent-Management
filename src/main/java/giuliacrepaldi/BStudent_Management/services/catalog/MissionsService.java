@@ -4,12 +4,14 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Course;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
+import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionDTO;
 import giuliacrepaldi.BStudent_Management.payloads.catalog.MissionReadinessDTO;
+import giuliacrepaldi.BStudent_Management.repositories.catalog.LessonPagesRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionStepsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.MissionExerciseSkillsRepository;
@@ -36,20 +38,24 @@ public class MissionsService implements IMissionsService {
     private static final BigDecimal FULL_WEIGHT = BigDecimal.valueOf(100);
     private static final String SORT_ORDER_CONSTRAINT = "missions_course_id_sort_order_idx";
     private static final String STEP_ORDER_CONSTRAINT = "mission_steps_mission_id_sort_order_idx";
+    private static final String YOUTUBE = "youtube";
 
     private final MissionsRepository missionsRepository;
     private final MissionStepsRepository missionStepsRepository;
+    private final LessonPagesRepository lessonPagesRepository;
     private final MissionExerciseSkillsRepository missionExerciseSkillsRepository;
     private final QuestionVersionsRepository questionVersionsRepository;
     private final ICoursesService coursesService;
     private final EntityManager entityManager;
 
     public MissionsService(MissionsRepository missionsRepository, MissionStepsRepository missionStepsRepository,
+                           LessonPagesRepository lessonPagesRepository,
                            MissionExerciseSkillsRepository missionExerciseSkillsRepository,
                            QuestionVersionsRepository questionVersionsRepository,
                            ICoursesService coursesService, EntityManager entityManager) {
         this.missionsRepository = missionsRepository;
         this.missionStepsRepository = missionStepsRepository;
+        this.lessonPagesRepository = lessonPagesRepository;
         this.missionExerciseSkillsRepository = missionExerciseSkillsRepository;
         this.questionVersionsRepository = questionVersionsRepository;
         this.coursesService = coursesService;
@@ -257,6 +263,7 @@ public class MissionsService implements IMissionsService {
         if (!visible.isEmpty() && !visible.getLast().isExercise()) {
             warnings.add("la missione finisce con una lezione: di solito si chiude con un esercizio");
         }
+        warnings.addAll(premiumVideoWarnings(mission));
         for (MissionStep step : visible) {
             if (step.isExercise()) {
                 problems.addAll(exerciseProblems(step.getMissionExercise()));
@@ -350,6 +357,23 @@ public class MissionsService implements IMissionsService {
         // Sostituite per intero: l'Admin manda sempre l'elenco completo nell'ordine voluto
         replaceAll(mission.getBriefingLines(), body.briefingLines());
         replaceAll(mission.getLearningGoals(), body.learningGoals());
+    }
+
+    // Contenuti premium su YouTube non in elenco: chi ha il link li vede e li condivide, Vimeo limita
+    // la riproduzione al dominio (blueprint §5.1). Avviso, non blocco
+    private List<String> premiumVideoWarnings(Mission mission) {
+        AccessTier tier = mission.getAccessTier() != null ? mission.getAccessTier() : mission.getCourse().getAccessTier();
+        if (tier != AccessTier.premium) {
+            return List.of();
+        }
+        List<String> warnings = new ArrayList<>();
+        if (YOUTUBE.equals(mission.getBriefingVideoProvider())) {
+            warnings.add("il video del briefing è su YouTube ma la missione è premium: per i contenuti premium usa Vimeo");
+        }
+        for (String title : lessonPagesRepository.findLessonTitlesWithVideoProvider(mission.getMissionId(), YOUTUBE)) {
+            warnings.add("la lezione «" + title + "» ha un video su YouTube ma la missione è premium: per i contenuti premium usa Vimeo");
+        }
+        return warnings;
     }
 
     private void assertSingleFinal(long courseId, Long missionId, boolean isFinal) {

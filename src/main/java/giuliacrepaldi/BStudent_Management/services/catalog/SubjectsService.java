@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.services.catalog;
 
 import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.entities.skills.Skill;
+import giuliacrepaldi.BStudent_Management.entities.skills.SubjectSkill;
 import giuliacrepaldi.BStudent_Management.enums.catalog.SubjectStatus;
 import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
@@ -9,6 +10,7 @@ import giuliacrepaldi.BStudent_Management.payloads.catalog.SubjectDTO;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.CoursesRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.SubjectsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.skills.SkillsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.skills.SubjectSkillsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ISubjectsService;
 import giuliacrepaldi.BStudent_Management.utilities.Pageables;
 import giuliacrepaldi.BStudent_Management.utilities.Slugs;
@@ -27,12 +29,14 @@ public class SubjectsService implements ISubjectsService {
     private final SubjectsRepository subjectsRepository;
     private final CoursesRepository coursesRepository;
     private final SkillsRepository skillsRepository;
+    private final SubjectSkillsRepository subjectSkillsRepository;
 
     public SubjectsService(SubjectsRepository subjectsRepository, CoursesRepository coursesRepository,
-                           SkillsRepository skillsRepository) {
+                           SkillsRepository skillsRepository, SubjectSkillsRepository subjectSkillsRepository) {
         this.subjectsRepository = subjectsRepository;
         this.coursesRepository = coursesRepository;
         this.skillsRepository = skillsRepository;
+        this.subjectSkillsRepository = subjectSkillsRepository;
     }
 
     @Override
@@ -54,7 +58,9 @@ public class SubjectsService implements ISubjectsService {
                 .defaultSkill(findSkill(body.defaultSkillId()))
                 .build();
         applyContent(subject, body);
-        return subjectsRepository.save(subject);
+        Subject saved = subjectsRepository.save(subject);
+        addDefaultToSubjectSkills(saved);
+        return saved;
     }
 
     @Override
@@ -87,6 +93,7 @@ public class SubjectsService implements ISubjectsService {
         applyContent(subject, body);
         // Vale per i pesi risolti da ora: i tentativi già svolti conservano i propri contributi
         subject.setDefaultSkill(findSkill(body.defaultSkillId()));
+        addDefaultToSubjectSkills(subject);
         return subject;
     }
 
@@ -139,6 +146,21 @@ public class SubjectsService implements ISubjectsService {
         // TODO: anche argomenti Palestra e test di orientamento puntano alla materia; oggi la FK
         // li blocca con un 409 generico, da rendere un messaggio esplicito quando si implementano
         subjectsRepository.delete(subject);
+    }
+
+    // La skill predefinita è sempre tra le skill della materia: se manca entra in coda (blueprint §10.4-ter)
+    private void addDefaultToSubjectSkills(Subject subject) {
+        Skill skill = subject.getDefaultSkill();
+        if (skill == null
+                || subjectSkillsRepository.existsById_SubjectIdAndId_SkillId(subject.getSubjectId(), skill.getSkillId())) {
+            return;
+        }
+        subjectSkillsRepository.save(SubjectSkill.builder()
+                .id(new SubjectSkill.SubjectSkillId(subject.getSubjectId(), skill.getSkillId()))
+                .subject(subject)
+                .skill(skill)
+                .sortOrder(subjectSkillsRepository.findMaxSortOrder(subject.getSubjectId()) + 1)
+                .build());
     }
 
     private Skill findSkill(Long skillId) {

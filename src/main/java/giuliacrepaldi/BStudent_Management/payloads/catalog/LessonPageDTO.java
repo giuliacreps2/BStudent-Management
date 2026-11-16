@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.payloads.catalog;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 // Esattamente un contenuto: testo, immagine, oppure video (provider + identificativo).
@@ -9,8 +10,10 @@ public record LessonPageDTO(
         // citazione, riquadro, immagine, elenco; grassetto e corsivo minimi nei paragrafi), uguale per Risorse e Blog.
         // Da fare: struttura JSON validata dal backend al posto del testo libero e sanificazione al rendering
         String formattedText,
+        // Identificativo Cloudinary (blueprint §5.1). TODO: caricamento dall'Admin tramite il backend
         @Size(max = 500) String imageReference,
-        // TODO provider ammessi (es. youtube, vimeo) da decidere; oggi testo libero
-        @Size(max = 40) String videoProvider,
+        // youtube (non in elenco) per i contenuti free, vimeo per i premium (deciso il 16/11/2026, §5.1)
+        @Pattern(regexp = "youtube|vimeo", message = "Piattaforma video non valida: YouTube o Vimeo")
+        String videoProvider,
         @Size(max = 200) String videoIdentifier) {
 }

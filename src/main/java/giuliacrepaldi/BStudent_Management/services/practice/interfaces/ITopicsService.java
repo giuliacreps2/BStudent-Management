@@ -1,27 +1,34 @@
 package giuliacrepaldi.BStudent_Management.services.practice.interfaces;
 
+import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
+import giuliacrepaldi.BStudent_Management.payloads.practice.TopicDTO;
+import giuliacrepaldi.BStudent_Management.payloads.practice.TopicUsagesDTO;
+
+import java.util.List;
+
 /**
  * Argomenti della materia (blueprint §7.1, §7.3, §10.5).
- * Nome unico nella materia; immagine facoltativa (v0.9), usata nella Palestra al posto di quella della skill.
+ * Nome unico nella materia (ignorando le maiuscole); immagine facoltativa (v0.9), usata nella Palestra al
+ * posto di quella della skill.
  * L'argomento collega esercizio -> teoria: lo usano voci della Palestra, esercizi del banco, lezioni e Risorse.
- *
- * <h2>TODO — metodi da implementare (Fase 1, Admin)</h2>
- * Nell'interfaccia restano come commento finché non esistono DTO e implementazione.
- * <pre>
- * Topic saveNewTopic(long subjectId, TopicDTO body);
- *     // nome unico nella materia (ignorando maiuscole) -> ConflictException con messaggio chiaro
- * Topic findById(long topicId);
- * List&lt;Topic&gt; findBySubject(long subjectId);
- *     // ordinati per nome; pochi per materia: niente paginazione
- * Topic findByIdAndUpdate(long topicId, TopicDTO body);
- *     // nome e immagine; la materia non cambia (sposterebbe esercizi e lezioni in un'altra materia)
- * TopicUsagesDTO findUsages(long topicId);
- *     // dove è usato: voci Palestra, esercizi del banco, lezioni, Risorse, test (come QuestionBankEntryUsagesDTO)
- * void deleteTopic(long topicId);
- *     // solo se non è usato da nulla, altrimenti ConflictException che dice dove è usato
- * </pre>
- * DTO da creare: TopicDTO (name, imageReference), TopicResponseDTO, TopicUsagesDTO.
- * Controller: /admin/academy/subjects/{subjectId}/topics e /admin/academy/topics/{topicId}.
+ * <p>
+ * - La materia non cambia: sposterebbe esercizi e lezioni in un'altra materia.
+ * - deleteTopic: solo se non è usato da nulla (findUsages), altrimenti ConflictException che dice dove.
  */
 public interface ITopicsService {
+
+    //Admin
+    //CRUD -> create, read, update, delete
+
+    Topic saveNewTopic(long subjectId, TopicDTO body);
+
+    Topic findById(long topicId);
+
+    List<Topic> findBySubject(long subjectId); // per nome; pochi per materia: niente paginazione
+
+    Topic findByIdAndUpdate(long topicId, TopicDTO body); // nome e immagine
+
+    TopicUsagesDTO findUsages(long topicId);
+
+    void deleteTopic(long topicId);
 }

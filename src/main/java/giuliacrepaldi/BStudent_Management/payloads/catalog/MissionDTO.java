@@ -2,6 +2,7 @@ package giuliacrepaldi.BStudent_Management.payloads.catalog;
 
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -18,8 +19,9 @@ public record MissionDTO(
         @Size(max = 500) String coverReference,
         // Prova finale: al massimo una per corso
         boolean isFinal,
-        // Video del briefing: entrambi o nessuno
-        @Size(max = 40) String briefingVideoProvider,
+        // Video del briefing: entrambi o nessuno; youtube per i contenuti free, vimeo per i premium (§5.1)
+        @Pattern(regexp = "youtube|vimeo", message = "Piattaforma video non valida: YouTube o Vimeo")
+        String briefingVideoProvider,
         @Size(max = 200) String briefingVideoIdentifier,
         // Battute della guida (fino a 5) e "Cosa imparerai" (fino a 5); null = nessuna
         @Size(max = 5) List<@NotBlank @Size(max = 500) String> briefingLines,

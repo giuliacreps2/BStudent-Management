@@ -16,6 +16,7 @@ public interface SkillsRepository extends JpaRepository<Skill, Long> {
     @Query(value = """
             SELECT EXISTS (SELECT 1 FROM mission_exercise_skills WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM subjects WHERE default_skill_id = :id)
+                OR EXISTS (SELECT 1 FROM subject_skills WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM practice_exercises WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM accessories WHERE skill_id = :id)
                 OR EXISTS (SELECT 1 FROM skill_levels WHERE skill_id = :id)

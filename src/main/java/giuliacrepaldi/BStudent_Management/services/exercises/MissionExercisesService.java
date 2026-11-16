@@ -22,6 +22,7 @@ import giuliacrepaldi.BStudent_Management.repositories.skills.SkillsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
 import giuliacrepaldi.BStudent_Management.services.exercises.interfaces.IMissionExercisesService;
 import giuliacrepaldi.BStudent_Management.services.exercises.interfaces.IQuestionBankService;
+import giuliacrepaldi.BStudent_Management.services.skills.interfaces.ISubjectSkillsService;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,7 @@ public class MissionExercisesService implements IMissionExercisesService {
     private final MissionStepsRepository missionStepsRepository;
     private final IMissionsService missionsService;
     private final IQuestionBankService questionBankService;
+    private final ISubjectSkillsService subjectSkillsService;
     private final EntityManager entityManager;
 
     public MissionExercisesService(MissionExercisesRepository missionExercisesRepository,
@@ -58,7 +60,8 @@ public class MissionExercisesService implements IMissionExercisesService {
                                    SkillsRepository skillsRepository,
                                    MissionStepsRepository missionStepsRepository,
                                    IMissionsService missionsService,
-                                   IQuestionBankService questionBankService, EntityManager entityManager) {
+                                   IQuestionBankService questionBankService,
+                                   ISubjectSkillsService subjectSkillsService, EntityManager entityManager) {
         this.missionExercisesRepository = missionExercisesRepository;
         this.skillWeightsRepository = skillWeightsRepository;
         this.exerciseAttemptsRepository = exerciseAttemptsRepository;
@@ -67,6 +70,7 @@ public class MissionExercisesService implements IMissionExercisesService {
         this.missionStepsRepository = missionStepsRepository;
         this.missionsService = missionsService;
         this.questionBankService = questionBankService;
+        this.subjectSkillsService = subjectSkillsService;
         this.entityManager = entityManager;
     }
 
@@ -187,6 +191,11 @@ public class MissionExercisesService implements IMissionExercisesService {
             Set<Long> missing = new HashSet<>(skillIds);
             missing.removeAll(skills.keySet());
             throw new NotFoundException("Skill non trovate: " + missing);
+        }
+        // Solo skill della materia della missione (blueprint §10.4-ter)
+        long subjectId = exercise.getMission().getCourse().getSubject().getSubjectId();
+        for (Long skillId : skillIds) {
+            subjectSkillsService.assertSkillOfSubject(subjectId, skillId);
         }
 
         // Sostituzione in blocco: DELETE eseguito subito, poi i nuovi INSERT.
