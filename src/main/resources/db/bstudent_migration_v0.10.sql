@@ -4,7 +4,7 @@
 -- decisioni del 16/11/2026).
 -- - Palestra: difficolta' delle voci; argomenti: classe di riferimento;
 -- - livelli delle skill: curva della beta e livelli di partenza;
--- - accrediti skill: materia; vista dei totali per studente, materia e skill;
+-- - accrediti skill: materia; nuova vista dei totali per studente, materia e skill;
 -- - personaggi: "iniziale" e motto; regole degli stadi; stadi raggiunti;
 -- - XP dello studente: registro per missione superata;
 -- - vite ottenute (sfida giornaliera, tris della Palestra);
@@ -86,12 +86,14 @@ END $$;
 
 -- Totali per studente, materia, skill e origine (practice / mission).
 -- Gli accrediti senza materia restano visibili con subject_id vuoto.
-CREATE OR REPLACE VIEW student_skill_totals AS
+-- Vista NUOVA: nel DB esiste gia' student_skill_totals (senza materia); non
+-- si tocca, perche' questa migrazione aggiunge soltanto.
+CREATE OR REPLACE VIEW student_subject_skill_totals AS
 SELECT student_id,
        subject_id,
        skill_id,
        source_kind,
-       sum(delta) AS total_points
+       sum(delta) AS points
   FROM skill_credit_entries
  GROUP BY student_id, subject_id, skill_id, source_kind;
 

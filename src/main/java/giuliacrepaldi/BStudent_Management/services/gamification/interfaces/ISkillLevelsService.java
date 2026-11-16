@@ -46,7 +46,8 @@ package giuliacrepaldi.BStudent_Management.services.gamification.interfaces;
  *     // alzare una soglia esistente farebbe scendere chi l'aveva superata, quindi è vietato
  *     // (BadRequestException: "Puoi aggiungere livelli o abbassare le soglie, non alzarle")
  * </pre>
- * Fatti letti: vista student_skill_totals (studente, materia, skill, origine) sopra skill_credit_entries.
+ * Fatti letti: vista student_subject_skill_totals (studente, materia, skill, origine) sopra
+ * skill_credit_entries. La vista student_skill_totals, già nel DB, non ha la materia e non si usa.
  * DTO da creare: SkillLevelStateDTO, PracticeLockDTO, SkillLevelsDTO, ProgramNoticeDTO.
  * TODO per il branch dei corsi: campo "Difficoltà" nel form Admin della voce della Palestra
  * (PracticeExerciseDTO) e uso di getLock nelle letture dello studente.

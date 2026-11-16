@@ -422,8 +422,8 @@ dei corsi. I nomi sono scelte tecniche e si fissano scrivendo la migrazione.
   livello medio minimo), uguale per tutti i personaggi. `skin_evolutions` resta per le immagini di ogni
   personaggio.
 - `skill_credit_entries`: materia (facoltativa nel DB, compilata dal Blocco 5 a ogni accredito).
-- Vista `student_skill_totals` (studente, materia, skill, origine), oggi descritta in `StudentSkillTotal.java`
-  ma non presente nel DB.
+- Vista nuova `student_subject_skill_totals` (studente, materia, skill, origine). Nel DB esiste già
+  `student_skill_totals`, senza la materia: resta com'è e non si usa per i livelli.
 - XP dello studente: registro `student_xp_entries` (studente, missione, XP, data), una riga per missione
   superata. Serve perché gli XP si fissano al momento del superamento: se in seguito cambiano i punti degli
   esercizi, gli XP già guadagnati non cambiano. Il totale è la somma del registro.
