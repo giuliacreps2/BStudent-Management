@@ -229,6 +229,8 @@ Marcatore dello spazio, formato rich text, rappresentazione rubriche e mescolame
 
 ### 6.3 Correzione docente
 
+**Aggiornamento del 17/11/2026:** nella beta corregge l'Admin; che cosa vede lo studente dopo un esercizio: vedi Blueprint Svolgimento (`BStudent_Blueprint_Svolgimento_v0.1.md`) §3 e §4.
+
 - La docente assegna **percentuale 0–100 e feedback scritto**.
 - Dopo la convalida, il giudizio è **definitivo nella v0.1**.
 - L’attesa non produce una valutazione provvisoria definitiva né perdita di vite.
@@ -396,7 +398,9 @@ Si prevede **“Annulla invio”**. In quel caso l’esercizio è considerato no
 
 Questa è un’eccezione esplicita alla precedente equiparazione automatica esercizio non superato → missione fallita. Le vecchie firme e gli stati SQL non la rappresentano ancora completamente.
 
-**Non deciso:** perdita o meno di vite, punto/stato di ripresa, trattamento di un giudizio già emesso e collocazione delle consegne docente prima dell’ultimo esercizio. Le proposte successive su questi aspetti sono state ritirate; il blueprint non le inventa.
+**Deciso il 17/11/2026:** vite, punto di ripresa, giudizio già emesso e posizione degli esercizi corretti dalla docente sono nel Blueprint Svolgimento (`BStudent_Blueprint_Svolgimento_v0.1.md`) §1 e §2.
+
+**Non deciso (superato dalla riga qui sopra):** perdita o meno di vite, punto/stato di ripresa, trattamento di un giudizio già emesso e collocazione delle consegne docente prima dell’ultimo esercizio. Le proposte successive su questi aspetti sono state ritirate; il blueprint non le inventa.
 
 ## 10. Progressione: punti, record e risultati
 
