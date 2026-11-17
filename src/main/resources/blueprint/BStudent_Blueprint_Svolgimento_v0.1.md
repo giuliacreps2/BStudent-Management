@@ -120,8 +120,14 @@ l'esito e si ritrova la propria risposta, modificabile. In Palestra non ci sono 
 La rielaborazione, in cui lo studente rispiega una regola con parole sue, è uno degli esercizi di punta della
 piattaforma (blueprint principale §13).
 
-8.1. **Non fa parte del Blocco 5.** Si valuta una prima versione "beta" **dopo** averlo chiuso, a condizione
-che non rompa il codice e non richieda di stravolgerlo.
+8.1. **Deciso il 17/11/2026: entra nella beta, senza AI.** Per l'AI serve prima un parere legale (§8.5), quindi
+per ora **corregge Giulia**. Si sviluppa come ultima parte del Blocco 5, dopo lo svolgimento e la pagina delle
+consegne, a condizione che non rompa il codice e non richieda di stravolgerlo.
+
+8.1-bis. **Da progettare insieme: come ridurre il carico della correzione.** Idee di partenza: giudizi rapidi
+già pronti con una nota facoltativa al posto di percentuale e testo lungo (il giudizio non cambia punti né
+superamento, §8.2); rielaborazione facoltativa per lo studente; un numero massimo per missione; una pagina
+che le mostra una dopo l'altra.
 
 8.2. Perché è fattibile senza stravolgimenti: per le regole già decise la rielaborazione **non cambia
 superamento, punti o vite**, e la missione non la aspetta. È un'aggiunta accanto a un esercizio, non un passo
@@ -130,19 +136,36 @@ nuovo dello svolgimento. La tabella che la conserva esiste già.
 8.3. **Vincolo per il Blocco 5:** lo svolgimento va scritto senza chiuderle la strada: ogni tentativo ha la
 sua risposta e il suo esito, e una rielaborazione si potrà agganciare al tentativo senza modificarlo.
 
-8.4. **Proposta per la versione beta (da decidere dopo il Blocco 5):**
+8.4. **Due passi:**
 
-- primo passo senza AI: lo studente scrive la rielaborazione scegliendo un contesto (per esempio uno sport) e
-  l'Admin lascia un feedback dalla stessa pagina delle consegne;
-- secondo passo con l'AI che propone correzione e feedback, sempre convalidati da una persona.
+- nella beta, senza AI: lo studente scrive la rielaborazione scegliendo un contesto (per esempio uno sport) e
+  Giulia lascia il feedback dalla pagina delle consegne;
+- dopo il parere legale: l'AI propone correzione e feedback, sempre convalidati da una persona.
 
 8.5. **TODO legale prima dell'AI:** i testi sono scritti da minorenni e verrebbero inviati a un servizio
 esterno. Vanno indicati nell'informativa e serve il consenso previsto (Piano MVP, P.3).
 
-## 9. Rappresentazione SQL
+## 9. Una missione in corso per materia (deciso il 17/11/2026)
 
-Nessuna migrazione prevista per il Blocco 5: tentativi, giudizi, checkpoint, record e accrediti hanno già le
-loro tabelle. Scelte tecniche:
+9.1. Lo studente può avere **una missione in corso per ogni materia**: per esempio una di Latino e una di
+Greco aperte insieme. Sostituisce "una sola missione in corso per studente" del blueprint principale §9.1.
+
+9.2. Nella stessa materia resta una sola: chi prova ad aprirne un'altra legge "Hai già una missione di Latino
+in corso: [titolo]". Una missione in attesa della docente non conta come "in corso" (§1.4).
+
+9.3. Le vite restano uniche e condivise fra tutte le materie (blueprint principale §12.1).
+
+## 10. Correzione automatica del testo (precisato il 17/11/2026)
+
+Nel completamento e nella traduzione di frase con alternative si ignorano: maiuscole e minuscole, spazi
+all'inizio e alla fine, **spazi doppi**. Tutto il resto deve essere preciso: punteggiatura, accenti, lettere e
+gli spazi tra le parole. Esempio: "rosam  et" vale come "rosam et"; "ros am" no.
+
+## 11. Rappresentazione SQL
+
+Tentativi, giudizi, checkpoint, record e accrediti hanno già le loro tabelle. Serve una sola migrazione
+(v0.11) per la missione in corso per materia (§9): `mission_runs` riceve la materia e l'indice "una missione
+in corso" passa da studente a studente e materia. Scelte tecniche:
 
 - Il record dei punti skill per esercizio di missione (§5) si legge dal registro degli accrediti
   (`skill_credit_entries`, origine `mission` e identificativo dell'esercizio della missione): non serve una

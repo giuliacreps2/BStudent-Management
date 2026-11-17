@@ -1,6 +1,7 @@
 package giuliacrepaldi.BStudent_Management.entities.attempts;
 
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
+import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.entities.identity.Student;
 import giuliacrepaldi.BStudent_Management.enums.attempts.MissionRunStatus;
 import jakarta.persistence.*;
@@ -25,11 +26,12 @@ import java.time.OffsetDateTime;
                 @UniqueConstraint(name = "mission_runs_mission_run_id_student_id_idx", columnNames = {"mission_run_id", "student_id"})
         },
         indexes = {
-                @Index(name = "idx_mission_runs_mission", columnList = "mission_id")
+                @Index(name = "idx_mission_runs_mission", columnList = "mission_id"),
+                @Index(name = "idx_mission_runs_subject", columnList = "subject_id")
         }
 )
-// Indice unico parziale gestito solo dal DB:
-// uq_open_mission_run (student_id) WHERE status = 'in_progress'
+// Indice unico parziale gestito solo dal DB (v0.11, Blueprint Svolgimento §9):
+// uq_open_mission_run (student_id, subject_id) WHERE status = 'in_progress'
 public class MissionRun {
 
     @Id
@@ -45,6 +47,12 @@ public class MissionRun {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mission_id", nullable = false)
     private Mission mission;
+
+    // Materia della missione, copiata qui perché l'indice unico possa leggerla (una missione in corso per materia)
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", nullable = false)
+    private Subject subject;
 
     @NotNull
     @Enumerated(EnumType.STRING)

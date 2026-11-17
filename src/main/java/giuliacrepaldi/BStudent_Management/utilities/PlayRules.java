@@ -36,10 +36,12 @@ public final class PlayRules {
         return acceptedAnswers.stream().anyMatch(accepted -> normalize(accepted).equals(given)) ? FULL : ZERO;
     }
 
-    // Senza differenze di maiuscole e di spazi esterni (§6.2). La forma Unicode viene uniformata, così una
-    // lettera accentata scritta in due modi diversi dalla tastiera resta la stessa lettera
+    // Si ignorano maiuscole, spazi esterni e spazi doppi; tutto il resto deve essere preciso
+    // (§6.2; Blueprint Svolgimento §10). La forma Unicode viene uniformata, così una lettera accentata
+    // scritta in due modi diversi dalla tastiera resta la stessa lettera
     static String normalize(String text) {
-        return text == null ? "" : Normalizer.normalize(text, Normalizer.Form.NFC).strip().toLowerCase(Locale.ROOT);
+        return text == null ? "" : Normalizer.normalize(text, Normalizer.Form.NFC).strip()
+                .replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
     public static boolean isPassed(BigDecimal percentage, BigDecimal passingThreshold) {

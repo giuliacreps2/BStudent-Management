@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.exercises;
 
+import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
 import giuliacrepaldi.BStudent_Management.payloads.exercises.QuestionBankEntryVersionInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -53,4 +54,11 @@ public interface QuestionVersionsRepository extends JpaRepository<QuestionVersio
             GROUP BY v.questionBankEntry.questionBankEntryId
             """)
     List<QuestionBankEntryVersionInfo> findVersionInfo(@Param("entryIds") Collection<Long> entryIds);
+
+    // La versione che lo studente svolge: al massimo una per esercizio
+    @Query("""
+            SELECT v FROM QuestionVersion v
+            WHERE v.questionBankEntry.questionBankEntryId = :entryId AND v.isPublished = true
+            """)
+    Optional<QuestionVersion> findPublished(@Param("entryId") Long questionBankEntryId);
 }

@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.practice;
 
+import java.util.Optional;
 import java.util.List;
 import giuliacrepaldi.BStudent_Management.entities.practice.PracticeExercise;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
@@ -67,4 +68,6 @@ public interface PracticeExercisesRepository extends JpaRepository<PracticeExerc
              GROUP BY pe.practice_exercise_id
             """, nativeQuery = true)
     List<Object[]> findPersonalStates(@Param("studentId") Long studentId);
+
+    Optional<PracticeExercise> findByQuestionBankEntry_QuestionBankEntryId(Long questionBankEntryId);
 }

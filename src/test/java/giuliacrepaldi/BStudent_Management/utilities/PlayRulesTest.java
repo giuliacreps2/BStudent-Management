@@ -31,15 +31,19 @@ class PlayRulesTest {
     }
 
     @Test
-    void ilCompletamentoIgnoraMaiuscoleESpaziEsterni() {
+    void ilCompletamentoIgnoraMaiuscoleSpaziEsterniESpaziDoppi() {
         List<String> accepted = List.of("rosam", "Rosas");
         assertThat(PlayRules.gradeText("  ROSAM ", accepted)).isEqualByComparingTo("100");
         assertThat(PlayRules.gradeText("rosas", accepted)).isEqualByComparingTo("100");
         assertThat(PlayRules.gradeText("rosa", accepted)).isEqualByComparingTo("0");
         assertThat(PlayRules.gradeText("   ", accepted)).isEqualByComparingTo("0");
         assertThat(PlayRules.gradeText(null, accepted)).isEqualByComparingTo("0");
-        // Gli spazi interni contano: è un'altra risposta
+        // Uno spazio dentro la parola la rende un'altra risposta
         assertThat(PlayRules.gradeText("ros am", accepted)).isEqualByComparingTo("0");
+        // Gli spazi doppi si ignorano; punteggiatura e accenti no
+        assertThat(PlayRules.gradeText("rosam   et  lilium", List.of("rosam et lilium"))).isEqualByComparingTo("100");
+        assertThat(PlayRules.gradeText("rosam, et lilium", List.of("rosam et lilium"))).isEqualByComparingTo("0");
+        assertThat(PlayRules.gradeText("perche", List.of("perché"))).isEqualByComparingTo("0");
     }
 
     @Test

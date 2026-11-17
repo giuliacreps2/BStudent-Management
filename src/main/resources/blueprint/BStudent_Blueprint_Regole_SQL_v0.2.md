@@ -358,7 +358,7 @@ L’autrice non prepara le combinazioni di risposte: assegna un segnale a ogni o
 
 - Almeno **una vita** per avviare, ritentare o riprendere una missione.
 - L’ingresso non consuma la vita: si perde solo al fallimento.
-- Una sola missione in corso per studente, inclusa una missione salvata.
+- Una sola missione in corso per studente, inclusa una missione salvata. **Aggiornato il 17/11/2026:** una per materia (Blueprint Svolgimento §9).
 - Lezioni ed esercizi uno alla volta nell’ordine della sequenza (§5.5); dopo un esercizio si procede solo dopo il suo superamento.
 - Ogni esercizio ha il proprio tempo configurato.
 - **[Superato in v0.8]** ~~Il timer parte quando termina la lezione testuale o video precedente~~: il tempo parte **quando l’esercizio compare** allo studente. Poiché la missione inizia con una lezione e due esercizi non si susseguono, ogni esercizio compare dopo una lezione.
