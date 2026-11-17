@@ -61,8 +61,17 @@ già.
 più difficili in automatico). Richiede l'AI, che è fuori dall'MVP.
 
 2.6. **Livello di partenza (deciso il 16/11/2026).** Uno studente più grande non deve rifare gli esercizi
-facili per arrivare a quelli del suo anno. Il **test di orientamento** (blueprint principale §8.1) assegna un
-livello di partenza per ogni skill della materia; chi non fa il test parte dal livello 1.
+facili per arrivare a quelli del suo anno. Il **test di livello** della materia (blueprint principale §8.2)
+assegna un livello di partenza a tutte le skill di quella materia; chi non fa il test parte dal livello 1.
+
+| Risultato del test di livello | Livello di partenza |
+|---|---:|
+| Principiante | 1 |
+| Intermedio | 2 |
+| Avanzato | 3 |
+
+È una partenza prudente (precisato il 17/11/2026): chi è Avanzato apre subito le difficoltà fino alla 4 e
+sale in fretta; partire più in alto rischierebbe di proporre esercizi che lo studente sbaglia tutti.
 
 - Il livello di partenza vale come **punti di partenza** pari alla soglia di quel livello, usati **solo per il
   livello**: la barra riparte da lì e i punti veri si sommano.
@@ -72,8 +81,9 @@ livello di partenza per ogni skill della materia; chi non fa il test parte dal l
 Esempio: il test assegna a Grammatica il livello 3 (soglia 50). Lo studente parte al livello 3 con la barra a
 zero; dopo 45 punti veri è a 95 e sale al livello 4. Per il cappello gli servono comunque 50 punti veri.
 
-**TODO con il branch dei corsi:** la regola che trasforma il risultato del test in un livello. **Proposta:** il
-livello più alto in cui lo studente risponde bene ad almeno il 60% delle domande di quella skill.
+**TODO da valutare (17/11/2026):** un livello di partenza anche dal **test di orientamento**. Sono due test
+diversi: quello di orientamento consiglia esercizi e le sue risposte non hanno un "giusto o sbagliato", quindi
+oggi non assegna livelli. Da decidere se e come farlo, per esempio skill per skill.
 
 ## 3. Difficoltà delle voci della Palestra (deciso il 16/11/2026)
 
@@ -400,7 +410,7 @@ A dire se queste scelte sono giuste sarà l'esperienza degli studenti. Durante l
 | Filtro "Difficoltà" (§3.7) | non presente | studenti che cercano le voci più facili senza trovarle |
 | Muro alla fine del corso d'ingresso (§8b.2) | Evoluzione II solo con l'abbonamento | studenti gratuiti che smettono subito dopo il primo corso; genitori che non ricevono o ignorano la richiesta |
 | Avviso sugli argomenti degli anni dopo (§3b.3) | avviso, nessun blocco | studenti che si perdono in argomenti mai studiati |
-| Livello di partenza (§2.6) | dal test di orientamento | studenti partiti troppo in alto che sbagliano tutto, o troppo in basso |
+| Livello di partenza (§2.6) | dal test di livello: 1, 2, 3 | studenti partiti troppo in alto che sbagliano tutto, o troppo in basso |
 
 Per poterli cambiare senza perdere nulla: soglie in tabella, stadi raggiunti conservati (§4.5), livelli che
 non scendono (§2.3).

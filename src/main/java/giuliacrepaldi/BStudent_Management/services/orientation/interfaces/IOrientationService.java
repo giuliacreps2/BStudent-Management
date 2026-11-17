@@ -23,7 +23,7 @@ import java.util.List;
  * - nessuno stato pubblicato: la lettura studente userà solo i test senza problemi (checkReadiness).
  * Le modifiche restituiscono il test intero aggiornato, che è la vista dell'editor.
  *
- * <h2>TODO — parte studente (Fase 3)</h2>
+ * <h2>Parte studente: fatta in services.student.IStudentTestsService (traccia del contratto)</h2>
  * <pre>
  * OrientationTestViewDTO getTestForStudent(String subjectSlug, OrientationTestKind kind);
  *     // solo test senza problemi; domande e opzioni senza livelli né esercizi consigliati

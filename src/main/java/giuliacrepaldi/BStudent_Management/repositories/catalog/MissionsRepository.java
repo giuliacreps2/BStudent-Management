@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.catalog;
 
+import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.enums.catalog.AccessTier;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
@@ -36,4 +37,8 @@ public interface MissionsRepository extends JpaRepository<Mission, Long> {
     // 0 se il corso non ha missioni: la nuova va in coda con max + 1
     @Query("SELECT COALESCE(MAX(m.missionSortOrder), 0) FROM Mission m WHERE m.course.courseId = :courseId")
     int findMaxSortOrder(@Param("courseId") Long courseId);
+
+    List<Mission> findByCourse_CourseIdAndStatusOrderByMissionSortOrder(Long courseId, ContentStatus status);
+
+    Optional<Mission> findByCourse_CourseIdAndSlug(Long courseId, String slug);
 }

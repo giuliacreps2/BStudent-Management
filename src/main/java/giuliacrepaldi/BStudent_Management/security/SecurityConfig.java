@@ -87,6 +87,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/me", "/auth/me/**").authenticated()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/admin/academy/**").hasAuthority("ADMIN")
+                // Landing pubblica delle materie: solo contenuti pubblicati, nessun dato personale
+                .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
                 .requestMatchers("/academy/**").authenticated()
                 .anyRequest().authenticated()
         );

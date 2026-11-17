@@ -32,6 +32,9 @@ public class Student {
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    // Tutorial della prima volta (missioni, vite, tempo, cappello): mostrato una volta sola (v0.9, §5.9)
+    private OffsetDateTime tutorialSeenAt;
+
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")

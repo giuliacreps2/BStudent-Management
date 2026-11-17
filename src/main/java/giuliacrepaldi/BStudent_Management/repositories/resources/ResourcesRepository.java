@@ -1,5 +1,6 @@
 package giuliacrepaldi.BStudent_Management.repositories.resources;
 
+import java.util.List;
 import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.entities.resources.Resource;
 import giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus;
@@ -30,4 +31,20 @@ public interface ResourcesRepository extends JpaRepository<Resource, Long> {
 
     // Risorsa da ripassare per un argomento: la prima pubblicata (Blueprint Gamification §6.2)
     Optional<Resource> findFirstByTopic_TopicIdAndStatusOrderByResourceId(Long topicId, ContentStatus status);
+
+    // Risorse che lo studente vede nella materia
+    List<Resource> findBySubject_SubjectIdAndStatusOrderByTitle(Long subjectId, ContentStatus status);
+
+    Optional<Resource> findBySubject_SubjectIdAndSlug(Long subjectId, String slug);
+
+    // Ricerca semplice per titolo e descrizione (blueprint §7.4)
+    @Query("""
+            SELECT r FROM Resource r
+            WHERE r.subject.subjectId = :subjectId
+              AND r.status = giuliacrepaldi.BStudent_Management.enums.catalog.ContentStatus.published
+              AND (LOWER(r.title) LIKE LOWER(CONCAT('%', :text, '%'))
+                   OR LOWER(r.description) LIKE LOWER(CONCAT('%', :text, '%')))
+            ORDER BY r.title
+            """)
+    List<Resource> searchVisible(@Param("subjectId") Long subjectId, @Param("text") String text, Pageable pageable);
 }
