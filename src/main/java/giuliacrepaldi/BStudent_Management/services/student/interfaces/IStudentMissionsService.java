@@ -1,14 +1,19 @@
 package giuliacrepaldi.BStudent_Management.services.student.interfaces;
 
+import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
+import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.payloads.student.MissionMapDTO;
 import giuliacrepaldi.BStudent_Management.payloads.student.MissionPageDTO;
+import giuliacrepaldi.BStudent_Management.payloads.student.MissionStepDTO;
+
+import java.util.List;
 
 /**
  * Mappa del corso e pagina della missione viste dallo studente (blueprint §5.9; frontend types/missions.ts).
- * Lo svolgimento (avvio, tentativi, timer, checkpoint) è del Blocco 5, non di qui.
+ * Lo svolgimento (avvio, tentativi, timer, checkpoint) è in IMissionRunsService; le tappe dello stepper
+ * vengono dal percorso aperto (lezioni lette e checkpoint).
  *
- * <p>TODO (Blocco 5): lo stato delle tappe nello stepper arriva dai checkpoint; oggi la prima è l'attuale.
- * TODO: anteprima Admin delle bozze (?preview=true).
+ * <p>TODO: anteprima Admin delle bozze (?preview=true).
  */
 public interface IStudentMissionsService {
 
@@ -16,6 +21,14 @@ public interface IStudentMissionsService {
     MissionMapDTO getMissionMap(long studentId, String courseSlug);
 
     MissionPageDTO getMissionPage(long studentId, String courseSlug, String missionSlug);
+
+    // Missione che lo studente può avviare: visibile, attuale o già completata, accessibile (premium).
+    // Bloccata -> ConflictException; dell'abbonamento -> ForbiddenException; inesistente -> NotFoundException.
+    // Una sola regola, usata dalla pagina e dallo svolgimento
+    Mission findPlayableMission(long studentId, String courseSlug, String missionSlug);
+
+    // Tappe con stato done | current | todo, dai passi visibili, dalle lezioni lette e dagli esercizi superati
+    List<MissionStepDTO> stepper(List<MissionStep> visibleSteps, List<Long> readLessonIds, List<Long> passedExerciseIds);
 
     boolean isTutorialSeen(long studentId);
 

@@ -214,7 +214,10 @@ class StudentReadsTest {
         when(students.findById(STUDENT)).thenReturn(Optional.of(student));
         ILivesService livesService = mock(ILivesService.class);
         when(livesService.getLives(STUDENT)).thenReturn(new LivesDTO(lives, 5, null));
-        return new StudentMissionsService(catalogService, steps, missionAttempts, academy, students, entitlement,
+        return new StudentMissionsService(catalogService, steps, missionAttempts,
+                mock(giuliacrepaldi.BStudent_Management.repositories.attempts.MissionRunsRepository.class),
+                mock(giuliacrepaldi.BStudent_Management.repositories.attempts.MissionRunLessonsRepository.class),
+                mock(giuliacrepaldi.BStudent_Management.repositories.attempts.MissionCheckpointsRepository.class), academy, students, entitlement,
                 gameState, livesService, mock(IHintsService.class));
     }
 

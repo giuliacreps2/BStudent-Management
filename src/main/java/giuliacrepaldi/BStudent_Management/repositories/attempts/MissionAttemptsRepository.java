@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import giuliacrepaldi.BStudent_Management.enums.attempts.MissionAttemptStatus;
 import java.util.Collection;
+import java.util.Optional;
 import giuliacrepaldi.BStudent_Management.entities.attempts.MissionAttempt;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,9 @@ public interface MissionAttemptsRepository extends JpaRepository<MissionAttempt,
 
     // Tentativo di missione in corso (attivo, salvato o in correzione)
     boolean existsByStudent_StudentIdAndStatusIn(Long studentId, Collection<MissionAttemptStatus> statuses);
+
+    // Ultimo tentativo del percorso: quello aperto, oppure l'ultimo fallito da ritentare
+    Optional<MissionAttempt> findFirstByMissionRun_MissionRunIdOrderByAttemptNumberDesc(Long missionRunId);
 
     // Missioni del corso che lo studente ha superato almeno una volta
     @Query(value = """

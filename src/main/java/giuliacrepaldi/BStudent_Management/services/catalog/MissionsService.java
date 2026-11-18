@@ -16,6 +16,7 @@ import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionStepsRepos
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.MissionExerciseSkillsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionVersionsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.exercises.QuestionsRepository;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.ICoursesService;
 import giuliacrepaldi.BStudent_Management.services.catalog.interfaces.IMissionsService;
 import giuliacrepaldi.BStudent_Management.utilities.Reorders;
@@ -45,19 +46,21 @@ public class MissionsService implements IMissionsService {
     private final LessonPagesRepository lessonPagesRepository;
     private final MissionExerciseSkillsRepository missionExerciseSkillsRepository;
     private final QuestionVersionsRepository questionVersionsRepository;
+    private final QuestionsRepository questionsRepository;
     private final ICoursesService coursesService;
     private final EntityManager entityManager;
 
     public MissionsService(MissionsRepository missionsRepository, MissionStepsRepository missionStepsRepository,
                            LessonPagesRepository lessonPagesRepository,
                            MissionExerciseSkillsRepository missionExerciseSkillsRepository,
-                           QuestionVersionsRepository questionVersionsRepository,
+                           QuestionVersionsRepository questionVersionsRepository, QuestionsRepository questionsRepository,
                            ICoursesService coursesService, EntityManager entityManager) {
         this.missionsRepository = missionsRepository;
         this.missionStepsRepository = missionStepsRepository;
         this.lessonPagesRepository = lessonPagesRepository;
         this.missionExerciseSkillsRepository = missionExerciseSkillsRepository;
         this.questionVersionsRepository = questionVersionsRepository;
+        this.questionsRepository = questionsRepository;
         this.coursesService = coursesService;
         this.entityManager = entityManager;
     }
@@ -156,6 +159,7 @@ public class MissionsService implements IMissionsService {
             step.setStepSortOrder(i + 1);
             reordered.add(step);
         }
+        assertTeacherExerciseLast(reordered);
         assertValidSequence(mission, reordered);
         return reordered;
     }
@@ -164,6 +168,35 @@ public class MissionsService implements IMissionsService {
     @Transactional(readOnly = true)
     public MissionReadinessDTO checkReadiness(long missionId) {
         return readiness(findById(missionId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void assertTeacherExerciseLast(long missionId) {
+        assertTeacherExerciseLast(missionStepsRepository.findByMissionOrdered(missionId));
+    }
+
+    // Blueprint Svolgimento §1: dopo un esercizio si procede solo se è superato, quindi un esercizio corretto
+    // dalla docente a metà missione lascerebbe lo studente fermo per giorni. Errore subito, al salvataggio.
+    // Le lezioni dopo di lui sono ammesse (si leggono dopo l'esito); gli esercizi ritirati non contano
+    private void assertTeacherExerciseLast(List<MissionStep> steps) {
+        String problem = teacherExerciseProblem(steps);
+        if (problem != null) {
+            throw new ConflictException(problem);
+        }
+    }
+
+    private String teacherExerciseProblem(List<MissionStep> steps) {
+        List<MissionStep> exercises = steps.stream()
+                .filter(step -> step.isExercise() && !isWithdrawnExercise(step)).toList();
+        for (int i = 0; i < exercises.size() - 1; i++) {
+            MissionStep step = exercises.get(i);
+            if (questionsRepository.isTeacherAssessed(step.getMissionExercise().getQuestionBankEntry().getQuestionBankEntryId())) {
+                return "«" + exerciseTitle(step) + "» è corretto dalla docente e deve essere l'ultimo esercizio della "
+                        + "missione: spostalo in fondo, oppure togli gli esercizi che lo seguono";
+            }
+        }
+        return null;
     }
 
     @Override
@@ -254,6 +287,11 @@ public class MissionsService implements IMissionsService {
         List<MissionStep> steps = missionStepsRepository.findByMissionOrdered(mission.getMissionId());
         List<MissionStep> visible = visibleSteps(steps, !published);
         List<String> problems = sequenceProblems(visible);
+        // Anche qui: una nuova versione dell'esercizio può essere passata alla correzione della docente
+        String teacherProblem = teacherExerciseProblem(steps);
+        if (teacherProblem != null) {
+            problems.add(teacherProblem);
+        }
         List<String> warnings = new ArrayList<>();
         for (MissionStep step : steps) {
             if (isWithdrawnExercise(step)) {

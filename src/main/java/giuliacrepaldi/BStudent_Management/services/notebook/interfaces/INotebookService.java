@@ -13,9 +13,6 @@ package giuliacrepaldi.BStudent_Management.services.notebook.interfaces;
  *     // dagli eventi di studio), ha una nota. Lezioni ritirate: resta solo la nota con "lezione non più
  *     // disponibile". Premium scaduto: titolo, anteprima e nota, lezione con lucchetto (IEntitlementService).
  *     // Più il colore della copertina e i segnalibri.
- * void acquireLesson(long studentId, long lessonId);
- *     // "Ho finito di leggere" o fine del video; lezione visibile allo studente; già presente -> nessun
- *     // errore e nessun duplicato. Lo studente non può toglierla.
  * NotebookLessonDTO getLesson(long studentId, long lessonId);
  *     // lezione in sola lettura + nota; 404 se non è nel Quaderno
  * LessonNote saveNote(long studentId, long lessonId, LessonNoteDTO body);
@@ -32,4 +29,8 @@ package giuliacrepaldi.BStudent_Management.services.notebook.interfaces;
  * Controller: /student/notebook/**.
  */
 public interface INotebookService {
+
+    // "Ho finito di leggere" nella missione (Blocco 5, MissionRunsService): la lezione entra nel Quaderno.
+    // Già presente: nessun errore e nessun duplicato. Lo studente non può toglierla
+    void acquireLesson(long studentId, long lessonId);
 }

@@ -56,6 +56,10 @@ public interface IMissionsService {
     // è pubblicata e la sequenza vista dallo studente non è più valida (la transazione va annullata)
     void assertSequenceStillValid(Mission mission);
 
+    // Un esercizio corretto dalla docente dev'essere l'ultimo esercizio della missione (Blueprint Svolgimento §1):
+    // altrimenti ConflictException con cosa fare. Va chiamato dopo ogni aggiunta o spostamento di un esercizio
+    void assertTeacherExerciseLast(long missionId);
+
     // Esercizio pubblicato con una versione pubblicata, skill a somma 100 o skill predefinita della materia
     List<String> exerciseProblems(MissionExercise exercise);
 

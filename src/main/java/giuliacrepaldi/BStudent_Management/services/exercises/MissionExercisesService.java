@@ -104,6 +104,8 @@ public class MissionExercisesService implements IMissionExercisesService {
                 .build());
         // In coda alla sequenza; nascosto, quindi la sequenza vista dallo studente non cambia
         missionStepsRepository.save(MissionStep.of(exercise, missionStepsRepository.findMaxSortOrder(missionId) + 1));
+        // Errore subito se finisce dopo un esercizio corretto dalla docente, o se lo è lui e non può stare in fondo
+        missionsService.assertTeacherExerciseLast(missionId);
         if (body.skills() != null) {
             replaceSkillWeights(exercise.getMissionExerciseId(), body.skills());
         }

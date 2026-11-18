@@ -28,4 +28,8 @@ public interface ExerciseAttemptsRepository extends JpaRepository<ExerciseAttemp
             """)
     Optional<ExerciseAttempt> findOpenPractice(@Param("studentId") Long studentId, @Param("entryId") Long entryId,
                                                @Param("statuses") Collection<ExerciseAttemptStatus> statuses);
+
+    // Esercizio aperto del tentativo di missione: al massimo uno (uq_open_mission_exercise_attempt)
+    Optional<ExerciseAttempt> findFirstByMissionAttempt_MissionAttemptIdAndStatusIn(Long missionAttemptId,
+                                                                                   Collection<ExerciseAttemptStatus> statuses);
 }

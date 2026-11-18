@@ -6,6 +6,10 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.entities.catalog.Subject;
 import giuliacrepaldi.BStudent_Management.entities.identity.Student;
+import giuliacrepaldi.BStudent_Management.entities.attempts.MissionRun;
+import giuliacrepaldi.BStudent_Management.enums.attempts.MissionRunStatus;
+import giuliacrepaldi.BStudent_Management.exceptions.ConflictException;
+import giuliacrepaldi.BStudent_Management.exceptions.ForbiddenException;
 import giuliacrepaldi.BStudent_Management.exceptions.NotFoundException;
 import giuliacrepaldi.BStudent_Management.payloads.gamification.LivesDTO;
 import giuliacrepaldi.BStudent_Management.payloads.gamification.MissionRewardsDTO;
@@ -15,6 +19,9 @@ import giuliacrepaldi.BStudent_Management.payloads.student.MissionNodeDTO;
 import giuliacrepaldi.BStudent_Management.payloads.student.MissionPageDTO;
 import giuliacrepaldi.BStudent_Management.payloads.student.MissionStepDTO;
 import giuliacrepaldi.BStudent_Management.repositories.attempts.MissionAttemptsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.attempts.MissionCheckpointsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.attempts.MissionRunLessonsRepository;
+import giuliacrepaldi.BStudent_Management.repositories.attempts.MissionRunsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.AcademySettingsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.catalog.MissionStepsRepository;
 import giuliacrepaldi.BStudent_Management.repositories.identity.StudentsRepository;
@@ -23,6 +30,7 @@ import giuliacrepaldi.BStudent_Management.services.gamification.interfaces.IHint
 import giuliacrepaldi.BStudent_Management.services.gamification.interfaces.ILivesService;
 import giuliacrepaldi.BStudent_Management.services.gamification.interfaces.IStudentGameStateService;
 import giuliacrepaldi.BStudent_Management.services.student.interfaces.IStudentMissionsService;
+import giuliacrepaldi.BStudent_Management.utilities.MissionPath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,10 +47,14 @@ public class StudentMissionsService implements IStudentMissionsService {
     private static final String COMPLETED = "completed";
     private static final String CURRENT = "current";
     private static final String LOCKED = "locked";
+    private static final List<MissionRunStatus> OPEN_RUN = List.of(MissionRunStatus.in_progress, MissionRunStatus.pending_review);
 
     private final StudentCatalogService catalogService;
     private final MissionStepsRepository missionStepsRepository;
     private final MissionAttemptsRepository missionAttemptsRepository;
+    private final MissionRunsRepository missionRunsRepository;
+    private final MissionRunLessonsRepository runLessonsRepository;
+    private final MissionCheckpointsRepository checkpointsRepository;
     private final AcademySettingsRepository academySettingsRepository;
     private final StudentsRepository studentsRepository;
     private final IEntitlementService entitlementService;
@@ -52,6 +64,9 @@ public class StudentMissionsService implements IStudentMissionsService {
 
     public StudentMissionsService(StudentCatalogService catalogService, MissionStepsRepository missionStepsRepository,
                                   MissionAttemptsRepository missionAttemptsRepository,
+                                  MissionRunsRepository missionRunsRepository,
+                                  MissionRunLessonsRepository runLessonsRepository,
+                                  MissionCheckpointsRepository checkpointsRepository,
                                   AcademySettingsRepository academySettingsRepository,
                                   StudentsRepository studentsRepository, IEntitlementService entitlementService,
                                   IStudentGameStateService gameStateService, ILivesService livesService,
@@ -59,6 +74,9 @@ public class StudentMissionsService implements IStudentMissionsService {
         this.catalogService = catalogService;
         this.missionStepsRepository = missionStepsRepository;
         this.missionAttemptsRepository = missionAttemptsRepository;
+        this.missionRunsRepository = missionRunsRepository;
+        this.runLessonsRepository = runLessonsRepository;
+        this.checkpointsRepository = checkpointsRepository;
         this.academySettingsRepository = academySettingsRepository;
         this.studentsRepository = studentsRepository;
         this.entitlementService = entitlementService;
@@ -87,16 +105,14 @@ public class StudentMissionsService implements IStudentMissionsService {
         Mission mission = catalogService.visibleMissions(course).stream()
                 .filter(m -> m.getMissionId().equals(node.missionId())).findFirst().orElseThrow();
 
-        List<MissionStepDTO> steps = new ArrayList<>();
-        int order = 1;
-        for (MissionStep step : StudentVisibility.visibleSteps(missionStepsRepository.findByMissionOrdered(mission.getMissionId()))) {
-            // Titolo per lo studente: mai il titolo interno dell'esercizio (§6.1).
-            // TODO (Blocco 5): fatta / attuale / da fare dai checkpoint; oggi la prima è l'attuale
-            steps.add(new MissionStepDTO(order, step.isExercise() ? "exercise" : "lesson",
-                    step.isExercise() ? step.getMissionExercise().getQuestionBankEntry().getTitle() : step.getLesson().getLessonTitle(),
-                    order == 1 ? "current" : "todo"));
-            order++;
-        }
+        // Tappe dal percorso aperto, se c'è; altrimenti si parte dalla prima
+        MissionRun run = missionRunsRepository.findByMission(studentId, mission.getMissionId(), OPEN_RUN).stream()
+                .findFirst().orElse(null);
+        List<Long> readLessons = run == null ? List.of() : runLessonsRepository.findLessonIds(run.getMissionRunId());
+        List<Long> passedExercises = run == null ? List.of() : checkpointsRepository.findExerciseIds(run.getMissionRunId());
+        List<MissionStepDTO> steps = stepper(
+                StudentVisibility.visibleSteps(missionStepsRepository.findByMissionOrdered(mission.getMissionId())),
+                readLessons, passedExercises);
         Subject subject = course.getSubject();
         MissionBriefingDTO briefing = new MissionBriefingDTO(subject.getGuideName(), subject.getGuideImageReference(),
                 List.copyOf(mission.getBriefingLines()), mission.getBriefingVideoProvider(), mission.getBriefingVideoIdentifier());
@@ -106,6 +122,41 @@ public class StudentMissionsService implements IStudentMissionsService {
         boolean canStart = !LOCKED.equals(node.status()) && !node.premiumLocked() && lives.lives() > 0;
         return new MissionPageDTO(node, course.getSlug(), course.getCourseTitle(), passingThreshold(), rewards, steps,
                 briefing, lives, hintsService.getCharges(studentId), canStart, isTutorialSeen(studentId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Mission findPlayableMission(long studentId, String courseSlug, String missionSlug) {
+        Course course = catalogService.findVisibleCourse(courseSlug);
+        MissionNodeDTO node = nodes(studentId, course).stream()
+                .filter(n -> n.slug().equals(missionSlug)).findFirst()
+                .orElseThrow(() -> new NotFoundException("Missione non trovata"));
+        if (LOCKED.equals(node.status())) {
+            throw new ConflictException("Questa missione si sblocca quando superi quelle prima");
+        }
+        if (node.premiumLocked()) {
+            throw new ForbiddenException("Questa missione fa parte dell'abbonamento");
+        }
+        return catalogService.visibleMissions(course).stream()
+                .filter(m -> m.getMissionId().equals(node.missionId())).findFirst().orElseThrow();
+    }
+
+    @Override
+    public List<MissionStepDTO> stepper(List<MissionStep> visibleSteps, List<Long> readLessonIds,
+                                        List<Long> passedExerciseIds) {
+        MissionPath.Position position = MissionPath.of(visibleSteps.stream()
+                .map(step -> new MissionPath.Step(step.isExercise(),
+                        step.isExercise() ? step.getMissionExercise().getMissionExerciseId() : step.getLesson().getLessonId()))
+                .toList(), readLessonIds, passedExerciseIds);
+        List<MissionStepDTO> steps = new ArrayList<>();
+        for (int i = 0; i < visibleSteps.size(); i++) {
+            MissionStep step = visibleSteps.get(i);
+            // Titolo per lo studente: mai il titolo interno dell'esercizio (§6.1)
+            steps.add(new MissionStepDTO(i + 1, step.isExercise() ? "exercise" : "lesson",
+                    step.isExercise() ? step.getMissionExercise().getQuestionBankEntry().getTitle() : step.getLesson().getLessonTitle(),
+                    position.statuses().get(i)));
+        }
+        return steps;
     }
 
     @Override

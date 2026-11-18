@@ -36,4 +36,18 @@ public interface SkillCreditEntriesRepository extends JpaRepository<SkillCreditE
             """)
     BigDecimal findBestContribution(@Param("studentId") Long studentId, @Param("skillId") Long skillId,
                                     @Param("sourceKind") SourceKind sourceKind, @Param("sourceId") Long sourceId);
+
+    // Punti skill della missione per una skill: somma dei migliori contributi dei suoi esercizi
+    // (mission_skill_contributions, Svolgimento §5)
+    @Query(value = """
+            SELECT COALESCE(SUM(best), 0) FROM (
+                SELECT MAX(e.new_contribution) AS best
+                  FROM skill_credit_entries e
+                  JOIN mission_exercises me ON me.mission_exercise_id = e.source_id
+                 WHERE e.student_id = :studentId AND e.skill_id = :skillId AND e.source_kind = 'mission'
+                   AND me.mission_id = :missionId
+                 GROUP BY e.source_id) t
+            """, nativeQuery = true)
+    BigDecimal sumBestMissionContributions(@Param("studentId") Long studentId, @Param("missionId") Long missionId,
+                                           @Param("skillId") Long skillId);
 }

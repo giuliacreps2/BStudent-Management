@@ -26,6 +26,11 @@ spostare un esercizio corretto dalla docente in un punto diverso dall'ultimo vie
 messaggio che dice cosa fare: "Un esercizio corretto dalla docente deve essere l'ultimo della missione:
 spostalo in fondo". Lo stesso vale se si aggiunge un altro esercizio dopo di lui.
 
+**Scelta tecnica (17/11/2026):** conta l'ultimo *esercizio*. Una lezione dopo di lui è ammessa: lo studente la
+legge dopo l'esito della docente (il controllo "missione pronta" avvisa già quando una missione finisce con una
+lezione). Gli esercizi ritirati non contano. Se una nuova versione dell'esercizio passa alla correzione della
+docente, il problema compare anche fra quelli che bloccano la pubblicazione della missione.
+
 1.3. **TODO di UX (Admin, frontend):** il riquadro "missione pronta" oggi non fa capire che cosa sta succedendo
 (osservazione di Giulia del 17/11/2026). Va ridisegnato: ogni problema accanto al passo a cui si riferisce, con
 l'azione da fare, al posto di un elenco in fondo alla pagina. Fino ad allora le regole nuove non si affidano a
@@ -173,3 +178,29 @@ in corso" passa da studente a studente e materia. Scelte tecniche:
 - L'ordine delle opzioni mostrate allo studente si salva nella configurazione del tentativo, così ricaricare
   la pagina non le rimescola; un tentativo nuovo le mescola di nuovo (blueprint principale §6.2).
 - "Annulla invio" riporta il tentativo da "in correzione" a "salvato": gli stati esistono già.
+
+**Aggiornato il 17/11/2026 (svolgimento scritto):** serve una seconda migrazione, la **v0.12** (il Blog passa
+alla v0.13). Aggiunge le **lezioni lette nel percorso** (`mission_run_lessons`): insieme ai checkpoint dicono a
+che punto è lo studente, anche quando ci sono due lezioni di seguito o chiude la pagina durante una lezione. Il
+Quaderno non basta: dice quali lezioni lo studente possiede, non dove si trova in una missione che sta ripetendo.
+
+Altre scelte tecniche dello svolgimento:
+
+- **Dove si trova lo studente:** il primo passo visibile non ancora fatto (lezione letta nel percorso o esercizio
+  superato). Così un esercizio ritirato si salta da solo (§6) e una lezione aggiunta dall'autrice prima del
+  punto raggiunto va letta. Calcolo in `utilities.MissionPath`, con i test.
+- **Tempo:** lo segna il server. Il frontend salva la risposta ogni pochi secondi; se per più di **45 secondi**
+  non arriva nulla, la missione va in pausa da sola, senza perdere vite: chi chiude il browser perde al massimo
+  quei 45 secondi. Una consegna arrivata fino a **3 secondi** dopo lo scadere viene accettata (ritardo della rete).
+- **Esito della docente** (§1.5): la pagina "Consegne da correggere" chiamerà `IMissionRunsService.onTeacherAssessed`.
+  Superato: missione superata. Sotto la soglia: una vita persa e si rifà solo quell'esercizio. Se nel frattempo lo
+  studente ha aperto un'altra missione della stessa materia, la prima aspetta che lui la riapra.
+- **"Annulla invio"** riporta la missione in pausa: lo studente preme "Riprendi" e il tempo riparte da dove si era
+  fermato. Non è possibile se intanto ha aperto un'altra missione della stessa materia (§9): il messaggio dice quale.
+- **Punti skill della missione** per skill: somma dei migliori contributi degli esercizi (`mission_skill_contributions`).
+- **Risultato della missione:** media degli esercizi superati nel percorso, pesata sui punti; è il record se è migliore.
+
+**TODO (corso già completato):** il database vuole che un corso completato abbia tutte le missioni superate. Se
+l'autrice pubblica una missione nuova in un corso già completato, oggi il completamento torna "non completato"
+finché lo studente non supera anche quella. L'Evoluzione I resta e non si riassegna. Da decidere se mostrare
+comunque "completato" (vedi anche `ICourseProgressService`).
