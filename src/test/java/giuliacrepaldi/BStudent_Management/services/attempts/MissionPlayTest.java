@@ -177,6 +177,8 @@ class MissionPlayTest {
         });
         when(exerciseRepository.findById(anyLong())).thenAnswer(invocation -> exerciseAttempts.stream()
                 .filter(a -> a.getExerciseAttemptId().equals(invocation.getArgument(0))).findFirst());
+        when(exerciseRepository.lockById(anyLong())).thenAnswer(invocation -> exerciseAttempts.stream()
+                .filter(a -> a.getExerciseAttemptId().equals(invocation.getArgument(0))).findFirst());
         when(exerciseRepository.findFirstByMissionAttempt_MissionAttemptIdAndStatusIn(anyLong(), any()))
                 .thenAnswer(invocation -> exerciseAttempts.stream()
                         .filter(a -> a.getMissionAttempt().getMissionAttemptId().equals(invocation.getArgument(0))

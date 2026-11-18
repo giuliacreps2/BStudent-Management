@@ -5,6 +5,7 @@ import giuliacrepaldi.BStudent_Management.entities.attempts.ExerciseAttempt;
 import giuliacrepaldi.BStudent_Management.entities.catalog.AcademySetting;
 import giuliacrepaldi.BStudent_Management.entities.exercises.Question;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionAnswer;
+import giuliacrepaldi.BStudent_Management.entities.identity.User;
 import giuliacrepaldi.BStudent_Management.entities.practice.Topic;
 import giuliacrepaldi.BStudent_Management.entities.resources.Resource;
 import giuliacrepaldi.BStudent_Management.enums.attempts.AssessmentMethod;
@@ -171,6 +172,27 @@ public class AssessmentsService implements IAssessmentsService {
     }
 
     @Override
+    @Transactional
+    public ExerciseAssessment assessByTeacher(ExerciseAttempt attempt, User teacher, BigDecimal percentage, String feedback) {
+        if (attempt.getStatus() != ExerciseAttemptStatus.pending_review) {
+            throw new IllegalStateException("Il tentativo " + attempt.getExerciseAttemptId() + " non è in attesa di correzione");
+        }
+        BigDecimal threshold = passingThreshold();
+        attempt.setStatus(ExerciseAttemptStatus.assessed);
+        attempt.setCompletedAt(OffsetDateTime.now());
+        return assessmentsRepository.save(ExerciseAssessment.builder()
+                .exerciseAttempt(attempt)
+                .assessmentMethod(AssessmentMethod.teacher)
+                .teacher(teacher)
+                .percentage(percentage)
+                .passingThreshold(threshold)
+                // Superato con la stessa regola degli altri esercizi (Svolgimento §1.5)
+                .passed(PlayRules.isPassed(percentage, threshold))
+                .feedback(feedback)
+                .build());
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public ExerciseOutcomeDTO toOutcome(ExerciseAttempt attempt, ExerciseAssessment assessment) {
         Question question = question(attempt);
@@ -212,7 +234,9 @@ public class AssessmentsService implements IAssessmentsService {
         return answersRepository.findByQuestion_QuestionIdOrderByAnswerSortOrder(question.getQuestionId());
     }
 
-    private BigDecimal passingThreshold() {
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal passingThreshold() {
         return academySettingsRepository.findById(ACADEMY_SETTINGS_ID)
                 .map(AcademySetting::getPassingThreshold)
                 .orElseThrow(() -> new NotFoundException("Impostazioni dell'Academy non trovate"));

@@ -137,6 +137,7 @@ class PracticePlayTest {
                         new BigDecimal("10.00"), List.of()))
                 .build();
         when(attempts.findById(ATTEMPT)).thenReturn(Optional.of(attempt));
+        when(attempts.lockById(ATTEMPT)).thenReturn(Optional.of(attempt));
         return attempt;
     }
 

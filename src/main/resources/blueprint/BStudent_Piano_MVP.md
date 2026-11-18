@@ -1,7 +1,12 @@
 # BStudent — Piano dell'MVP: cosa manca e con quale modello
 
-Aggiornato il 16/11/2026. Comprende tutto l'MVP, non solo questo branch. Il dettaglio del Blocco 4 è in
-`BStudent_TODO_Blocco4.md`, con le caselle da spuntare.
+Aggiornato il 18/11/2026 (prima versione: 16/11/2026). Comprende tutto l'MVP, non solo questo branch. Il dettaglio
+del Blocco 4 è in `BStudent_TODO_Blocco4.md`, con le caselle da spuntare.
+
+**Stato al 18/11/2026:** in due giorni di calendario (16–18/11) è stato fatto il backend di circa 18–26 giorni
+del piano: Admin di Palestra, test e Risorse, letture dello studente, gamification, svolgimento di Palestra e
+missioni, punti e progressi, consegne da correggere. **Restano circa 25–40 giorni pieni** (prima: 66–101). Il
+dettaglio è nel riepilogo in fondo.
 
 ## Come si dividono i modelli
 
@@ -16,6 +21,9 @@ del blueprint, DTO). Poi **Fable** lo implementa in una sessione. Infine il **Pr
 ti riassume le modifiche. Ogni pacchetto per Fable parte da un **brief**: interfaccia + sezioni del blueprint +
 voci di questo piano. Il Pro lo prepara prima di passare a Fable.
 
+**Dal 17/11/2026** Fable lavora anche sui corsi e sul Blocco 5, nel branch `feature/courses-development`
+(gamification già unita).
+
 **Stime:** giorni pieni di lavoro, comprese prove e correzioni; sono esclusi la scrittura dei contenuti, la
 revisione legale e il tempo delle tue decisioni. Sono stime, non promesse.
 
@@ -23,52 +31,53 @@ revisione legale e il tempo delle tue decisioni. Sono stime, non promesse.
 
 ## 1. Blocco 4 — Letture dello studente (branch `feature/courses-development`)
 
-**Deciso il 16/11/2026:** tutta la parte dei corsi resta al **Pro**, in questa chat. Fable lavora sulla gamification (§3).
+Fatto prima del piano: v0.9 applicata; Admin di materie, corsi, missioni, banco, lezioni e skill; interfacce dei service.
 
-Fatto: v0.9 applicata; Admin di materie, corsi, missioni, banco, lezioni e skill; interfacce dei service.
-
-| # | Lavoro | Modello | Giorni |
-|---|---|---|---:|
-| 4.1 | Skill della materia, argomenti (`ISubjectSkillsService`, `ITopicsService`) | Pro | 1 |
-| 4.2 | Voci della Palestra, test lato Admin, Risorse, utility `ContentBlocks`, entity mancanti | Pro | 2–3 |
-| 4.3 | Form Admin esistenti con i campi nuovi (materie, corsi, missioni, banco, lezioni, skill) | Pro | 1–2 |
-| 4.4 | Pagine Admin nuove: skill della materia, argomenti, Palestra, test, Risorse + **editor a blocchi** + caricamento delle immagini su Cloudinary tramite il backend | Pro | 3–4 |
-| 4.5 | Letture dello studente: `StudentVisibility` e i service di `services.student`, test lato studente, Quaderno, registro di studio, struttura di Progressi | Pro | 3–5 |
-| 4.6 | **Presentazione dei contenuti**: lettore della lezione (blocchi, pagine, "Ho finito di leggere", nota a lato), video YouTube e Vimeo con il play (fine del video = lezione nel Quaderno) | Pro | 2–3 |
-| 4.7 | Frontend studente: 20 errori TypeScript, mock sostituiti con le chiamate vere, Risorse nell'area riservata, barra fissa, segnale di tempo attivo | Pro | 4–6 |
-| 4.8 | Prova completa con uno studente `*@example.com` e correzioni | Pro | 1–2 |
-| | **Totale Blocco 4** | | **17–26** |
+| # | Lavoro | Modello | Giorni | Stato |
+|---|---|---|---:|---|
+| 4.1 | Skill della materia, argomenti (`ISubjectSkillsService`, `ITopicsService`) | Pro | 1 | **fatto** (16/11) |
+| 4.2 | Voci della Palestra, test lato Admin, Risorse, utility `ContentBlocks`, entity mancanti | Pro | 2–3 | **fatto** (16/11) |
+| 4.3 | Form Admin esistenti con i campi nuovi (materie, corsi, missioni, banco, lezioni, skill) | Pro | 1–2 | da fare (frontend) |
+| 4.4 | Pagine Admin nuove: skill della materia, argomenti, Palestra, test, Risorse + **editor a blocchi** + caricamento delle immagini su Cloudinary tramite il backend | Pro | 3–4 | da fare (frontend; Cloudinary anche backend) |
+| 4.5 | Letture dello studente: `StudentVisibility` e i service di `services.student`, test lato studente, Quaderno, registro di studio, struttura di Progressi | Pro | 3–5 | **in gran parte fatto** (17/11). Restano: metodi del Quaderno, registro di studio, Progressi |
+| 4.6 | **Presentazione dei contenuti**: lettore della lezione (blocchi, pagine, "Ho finito di leggere", nota a lato), video YouTube e Vimeo con il play (fine del video = lezione nel Quaderno) | Pro | 2–3 | backend di "Ho finito di leggere" fatto (18/11); resta il frontend |
+| 4.7 | Frontend studente: 20 errori TypeScript, mock sostituiti con le chiamate vere, Risorse nell'area riservata, barra fissa, segnale di tempo attivo | Pro | 4–6 | da fare |
+| 4.8 | Prova completa con uno studente `*@example.com` e correzioni | Pro | 1–2 | da fare |
+| | **Totale Blocco 4** | | **17–26** | |
 
 Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per i premium, **Cloudinary** per le immagini (blueprint §5.1). Servono: account Cloudinary e chiavi in `env.properties` (per la 4.4), un piano Vimeo che limiti la riproduzione al dominio (per la 4.6).
 
-## 2. Blocco 5 — Svolgimento, correzione, punti (branch nuovo)
+## 2. Blocco 5 — Svolgimento, correzione, punti (branch `feature/courses-development`)
 
-| # | Lavoro | Modello | Giorni |
-|---|---|---|---:|
-| 5.1 | Contratti: svolgimento di missioni e Palestra, timer, vite, checkpoint, "Annulla invio", correzione docente, punti (blueprint §7.2, §9, §10, §12) | Pro con te | 1–2 |
-| 5.2 | Backend dello svolgimento: tentativi, salvataggi, timer dal server, superamento, checkpoint, perdita di vite | **Fable** | 5–7 |
-| 5.3 | Punti e progressi: contributi Palestra e missioni, record, media del corso, prima evoluzione | Pro | 2–3 |
-| 5.4 | Frontend: **spazi per rispondere** (scelta multipla, completamento, traduzione di frase, versione, rielaborazione) e **missione in corso** (timer, vite, aiuto del cappello, esito) | **Fable** | 4–6 |
-| 5.5 | Correzione docente: ruolo docente minimo, coda delle consegne, percentuale e feedback, rubriche | Pro | 3–4 |
-| 5.6 | Dati veri in Palestra (stati, sfida giornaliera), Progressi e Quaderno ("Nuovo") | Pro | 1–2 |
-| | **Totale Blocco 5** | | **16–24** |
+Le decisioni sono in `BStudent_Blueprint_Svolgimento_v0.1.md`. Migrazioni v0.11 e v0.12 applicate.
 
-## 3. Gamification e dashboard (branch dedicato)
+| # | Lavoro | Modello | Giorni | Stato |
+|---|---|---|---:|---|
+| 5.1 | Contratti: svolgimento di missioni e Palestra, timer, vite, checkpoint, "Annulla invio", correzione docente, punti (blueprint §7.2, §9, §10, §12) | Pro con te | 1–2 | **fatto** (17/11) |
+| 5.2 | Backend dello svolgimento: tentativi, salvataggi, timer dal server, superamento, checkpoint, perdita di vite | **Fable** | 5–7 | **fatto** (Palestra 17/11, missioni 18/11) |
+| 5.3 | Punti e progressi: contributi Palestra e missioni, record, media del corso, prima evoluzione | Pro | 2–3 | **fatto** (17–18/11) |
+| 5.4 | Frontend: **spazi per rispondere** (scelta multipla, completamento, traduzione di frase, versione, rielaborazione) e **missione in corso** (timer, vite, aiuto del cappello, esito) | **Fable** | 4–6 | da fare |
+| 5.5 | Correzione docente: coda delle consegne, percentuale e feedback, rubriche come guida. Nella beta corregge l'Admin; il ruolo docente separato è dopo la beta | Pro | 3–4 | **backend fatto** (18/11); resta la pagina nel frontend |
+| 5.6 | Dati veri in Palestra (stati, sfida giornaliera), Progressi e Quaderno ("Nuovo") | Pro | 1–2 | Palestra fatta; Progressi e Quaderno con la 4.5 |
+| 5.7 | **Rielaborazione beta senza AI** (aggiunta il 17/11/2026, Svolgimento §8): corregge Giulia; prima va progettato con lei come ridurre il carico | Pro con te | 2–3 | da fare |
+| | **Totale Blocco 5** | | **18–27** | |
 
-| # | Lavoro | Modello | Giorni |
-|---|---|---|---:|
-| G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi. **Fatto il 16/11/2026:** `BStudent_Blueprint_Gamification_v0.1.md` | **Fable** con te | 1–2 |
-| G.2 | Migrazione (materia sui crediti skill, vista dei totali), XP dello studente, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite e attività per ottenerle. **Backend fatto (16/11/2026):** migrazione v0.10, calcoli con test, livelli e lucchetto, XP ed evoluzioni, vite, sfida giornaliera, tris, Serie e pausa, cappello e accessori, personaggi, dati per barra fissa, dashboard e pagina del personaggio, impostazioni di gioco, correzioni ai corsi (difficoltà, classe di riferimento, corso d'ingresso, skill obbligatorie). **Restano:** pagine dell'Admin e dello studente nel frontend; gli eventi dello svolgimento li chiamerà il Blocco 5 | **Fable** | 4–6 |
-| G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 |
-| | **Totale gamification** | | **7–11** |
+## 3. Gamification e dashboard
 
-## 4. Blog (v0.10)
+| # | Lavoro | Modello | Giorni | Stato |
+|---|---|---|---:|---|
+| G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi | **Fable** con te | 1–2 | **fatto** (16/11): `BStudent_Blueprint_Gamification_v0.1.md` |
+| G.2 | Migrazione v0.10, XP, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite, sfida giornaliera, tris, Serie, personaggi, dati per barra fissa e dashboard. Gli eventi dello svolgimento ora sono collegati (18/11) | **Fable** | 4–6 | **backend fatto** (16/11); restano le pagine dell'Admin e dello studente |
+| G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 | da fare (frontend) |
+| | **Totale gamification** | | **7–11** | |
 
-| # | Lavoro | Modello | Giorni |
-|---|---|---|---:|
-| B.1 | Mappa dei tipi del Blog e migrazione v0.10 (articoli, taglio, preferiti con FK, collegamenti dalle Risorse) | Pro | 1 |
-| B.2 | Admin degli articoli (riusa l'editor a blocchi), lettura pubblica con taglio, preferiti nel Quaderno | Pro | 2–3 |
-| | **Totale Blog** | | **3–4** |
+## 4. Blog (migrazione v0.13)
+
+| # | Lavoro | Modello | Giorni | Stato |
+|---|---|---|---:|---|
+| B.1 | Mappa dei tipi del Blog e migrazione v0.13 (articoli, taglio, preferiti con FK, collegamenti dalle Risorse) | Pro | 1 | da fare |
+| B.2 | Admin degli articoli (riusa l'editor a blocchi), lettura pubblica con taglio, preferiti nel Quaderno | Pro | 2–3 | da fare |
+| | **Totale Blog** | | **3–4** | |
 
 ## 5. Pagamenti, account, produzione
 
@@ -79,13 +88,15 @@ Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per 
 | P.3 | Account e GDPR: esporta e cancella i dati, consenso del genitore, utenti nell'Admin. **Aggiunto il 16/11/2026 (stima da rivedere):** passo "La tua scuola" dopo la registrazione, con classe obbligatoria, scuola facoltativa e import delle scuole d'Italia (Blueprint Gamification §6.6) | Pro | 4–6 |
 | P.4 | Testi e UX: copy delle pagine, stati vuoti, errori, accessibilità di base | Pro con te | 4–7 |
 | P.5 | Produzione: hosting, variabili d'ambiente, backup automatici, log ed errori, dominio, email | Pro | 4–6 |
-| P.6 | Test automatici dei service con più regole (visibilità, test, svolgimento, punti, Stripe) e revisione di sicurezza | Pro | 3–5 |
+| P.6 | Test automatici dei service con più regole (visibilità, test, svolgimento, punti, Stripe) e revisione di sicurezza. **In parte già fatti:** 187 test al 18/11 | Pro | 3–5 |
 | P.7 | Stabilizzazione prima della beta: correzioni dalla prova con i primi studenti | Pro | 2–3 |
 | | **Totale** | | **23–36** |
 
 ---
 
 ## Riepilogo
+
+### Stima del 16/11/2026
 
 | Parte | Giorni | di cui con Fable |
 |---|---:|---:|
@@ -96,31 +107,44 @@ Deciso il 16/11/2026: **YouTube non in elenco** per i video free, **Vimeo** per 
 | Pagamenti, account, produzione | 23–36 | 8–12 |
 | **Totale** | **66–101** | **29–43** |
 
-Rispetto alla stima del 7/11 (50–75 giorni) il totale cresce per le aggiunte decise dopo:
-- test di livello;
-- Risorse;
-- briefing e tutorial;
-- registro di studio;
-- presentazione dei contenuti;
-- editor a blocchi;
-- test automatici.
+Rispetto alla stima del 7/11 (50–75 giorni) il totale cresceva per le aggiunte decise dopo: test di livello,
+Risorse, briefing e tutorial, registro di studio, presentazione dei contenuti, editor a blocchi, test automatici.
 
-Fable non toglie lavoro, lo comprime. Le voci in grassetto sono quelle dove il tempo si accorcia di più, perché un
-pacchetto intero esce da una sessione invece che da molti passaggi. **Ipotesi da verificare sul primo pacchetto
-(gamification):** se Fable dimezza le sue voci, il totale scende a circa 52–80 giorni.
+### Stima del 18/11/2026: che cosa resta
+
+L'ipotesi del 16/11 era "se Fable dimezza le sue voci". Sul backend è andata meglio: in due giorni di calendario
+è stato fatto il lavoro di circa **18–26 giorni** del piano (4.1, 4.2, gran parte della 4.5, G.1, backend della
+G.2, 5.1, 5.2, 5.3, backend della 5.5).
+
+| Che cosa resta | Giorni nel piano | Stima nuova | Perché |
+|---|---:|---:|---|
+| **Backend**: Quaderno, registro di studio e Progressi, rielaborazione beta, Blog, Cloudinary, Stripe, account e GDPR | circa 18–25 | **5–9** | regole già scritte nei blueprint: è il lavoro che ora va veloce |
+| **Frontend**: form e pagine Admin, editor a blocchi, lettore delle lezioni, mock da sostituire, missione in corso, consegne da correggere, dashboard, acquisto, testi | circa 25–40 | **13–20** | velocità non ancora misurata; ogni pagina va guardata da te |
+| **Produzione e prova con i primi studenti** (P.5, P.7) | 6–9 | **6–9** | dipende da servizi esterni e da persone vere, non dal codice |
+| **Totale** | | **circa 25–40** | |
+
+Due avvertenze:
+
+- **I bug verranno fuori con il frontend.** Lo svolgimento è coperto dai test ma non è ancora stato provato
+  nell'app vera: le correzioni sono comprese nella stima, ma ci saranno.
+- **I tempi più lunghi ora sono fuori dal codice:** revisione legale (dati dei minori, consenso del genitore),
+  prezzi definitivi, account Stripe, hosting, dominio ed email, contenuti. Conviene avviarli subito, in parallelo.
 
 ## Decisioni tue che bloccano il lavoro
 
 | Prima di | Decisione |
 |---|---|
 | G.1 | ~~curva dei livelli, soglie, streak e bonus~~ decise il 16/11/2026 |
+| 5.7 | come ridurre il carico della correzione delle rielaborazioni (Svolgimento §8.1-bis) |
 | P.1 | prezzi e piani definitivi per la beta |
 | P.3 | revisione legale: profilazione dei minori, informativa, consenso del genitore |
 | dopo il Blocco 5 | motore degli errori: concetto = argomento? (`BStudent_Blueprint_Motore_Errori_v0.1.md`) |
+| da rivedere | correzione già data: resta definitiva o si può correggere un errore? (Svolgimento §4.3) |
+| quando serve | corso già completato e missione nuova pubblicata: mostrare comunque "completato"? (Svolgimento §11, TODO) |
 
 ## Fuori dall'MVP
 
 Motore degli errori (dopo il Blocco 5, ricostruibile dallo storico), correzione con l'AI, uso dell'AI tra i
-vantaggi dei piani in abbonamento, classifica,
-"Approfondisci" delle Risorse, "Mettiti alla prova", versione da stampare, evoluzioni proprie di ogni
-personaggio, mondo virtuale con scuole e sponsor.
+vantaggi dei piani in abbonamento, classifica, ruolo docente separato (Svolgimento §4.2), avviso allo studente
+quando arriva la correzione, "Approfondisci" delle Risorse, "Mettiti alla prova", versione da stampare, evoluzioni
+proprie di ogni personaggio, mondo virtuale con scuole e sponsor.

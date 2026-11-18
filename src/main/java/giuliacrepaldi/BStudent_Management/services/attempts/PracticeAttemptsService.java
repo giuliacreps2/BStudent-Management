@@ -171,7 +171,10 @@ public class PracticeAttemptsService implements IPracticeAttemptsService {
     @Override
     @Transactional
     public PracticeAttemptDTO cancelSubmission(long studentId, long exerciseAttemptId) {
-        ExerciseAttempt attempt = findAttempt(studentId, exerciseAttemptId);
+        // Riga bloccata: se la docente sta salvando l'esito, si aspetta e poi si vede che è già corretto
+        ExerciseAttempt attempt = attemptsRepository.lockById(exerciseAttemptId)
+                .filter(a -> a.getStudent().getStudentId().equals(studentId) && a.getContext() == ExerciseContext.practice)
+                .orElseThrow(() -> new NotFoundException("Tentativo non trovato"));
         if (attempt.getStatus() == ExerciseAttemptStatus.assessed) {
             throw new ConflictException("La docente ha già corretto questo esercizio: l'esito è definitivo");
         }

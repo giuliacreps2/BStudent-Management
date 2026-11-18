@@ -90,6 +90,12 @@ Richiede gestione degli utenti, permessi e assegnazione delle consegne. Il codic
 in modo che "chi può correggere" sia una regola in un punto solo, così aggiungere il ruolo non richiede di
 riscriverlo.
 
+4.3. **TODO da rivedere (indicazione di Giulia del 18/11/2026), per ora resta così:**
+
+- **Giudizio definitivo:** oggi una consegna già corretta non si corregge di nuovo. Da rivedere se serve poter
+  correggere un errore della docente (con quali effetti su punti, vite e superamento).
+- **Avviso allo studente** quando arriva l'esito: dopo la beta. Oggi lo vede riaprendo la missione o la Palestra.
+
 ## 5. Punti skill quando si ripete un esercizio di missione (deciso il 17/11/2026)
 
 5.1. Vale **la stessa regola della Palestra** (blueprint principale §10.1), applicata a ogni esercizio della
@@ -192,7 +198,11 @@ Altre scelte tecniche dello svolgimento:
 - **Tempo:** lo segna il server. Il frontend salva la risposta ogni pochi secondi; se per più di **45 secondi**
   non arriva nulla, la missione va in pausa da sola, senza perdere vite: chi chiude il browser perde al massimo
   quei 45 secondi. Una consegna arrivata fino a **3 secondi** dopo lo scadere viene accettata (ritardo della rete).
-- **Esito della docente** (§1.5): la pagina "Consegne da correggere" chiamerà `IMissionRunsService.onTeacherAssessed`.
+- **Esito della docente** (§1.5): la pagina "Consegne da correggere" (`ISubmissionsService`, scritta il 18/11/2026)
+  chiama `IMissionRunsService.onTeacherAssessed`, oppure per la Palestra `IPracticeProgressService.onAssessed`.
+  Consegne dalla più vecchia, filtro per materia; commento obbligatorio; il giudizio è definitivo. "Chi può
+  correggere" è in `ISubmissionsService.canAssess` (oggi l'Admin). La consegna resta bloccata mentre si salva
+  l'esito, così lo studente non può annullare l'invio nello stesso istante.
   Superato: missione superata. Sotto la soglia: una vita persa e si rifà solo quell'esercizio. Se nel frattempo lo
   studente ha aperto un'altra missione della stessa materia, la prima aspetta che lui la riapra.
 - **"Annulla invio"** riporta la missione in pausa: lo studente preme "Riprendi" e il tempo riparte da dove si era

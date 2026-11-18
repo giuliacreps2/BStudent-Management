@@ -322,7 +322,11 @@ public class MissionRunsService implements IMissionRunsService {
     @Override
     @Transactional
     public MissionPlayDTO cancelSubmission(long studentId, long exerciseAttemptId) {
-        ExerciseAttempt exercise = findMissionExercise(studentId, exerciseAttemptId);
+        // Riga bloccata: se la docente sta salvando l'esito, si aspetta e poi si vede che è già corretto
+        ExerciseAttempt exercise = exerciseAttemptsRepository.lockById(exerciseAttemptId)
+                .filter(attempt -> attempt.getStudent().getStudentId().equals(studentId)
+                        && attempt.getContext() == ExerciseContext.mission)
+                .orElseThrow(() -> new NotFoundException("Esercizio non trovato"));
         if (exercise.getStatus() == ExerciseAttemptStatus.assessed || assessmentsRepository.existsById(exerciseAttemptId)) {
             throw new ConflictException("La docente ha già corretto questo esercizio: l'esito è definitivo");
         }
