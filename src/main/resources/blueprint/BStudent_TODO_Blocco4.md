@@ -52,9 +52,10 @@ Una sola regola di visibilità (pubblicato + contenitori pubblicati + materia pu
 - [x] Test: invio delle risposte, calcolo (regola prudente per il livello, ordine per l'orientamento), salvataggio dei risultati (§8) → `IOrientationService` (parte studente)
 - [x] Palestra: materia attiva, skill della materia, elenco per skill raggruppato per argomento, obiettivo di oggi (§7.3) — stati e sfida giornaliera si riempiono con il Blocco 5 → `IStudentPracticeService`
 - [x] Risorse: pagina principale, dettaglio, ricerca, "Vai agli esercizi", segnalibri (§7.4) → `IStudentResourcesService`, segnalibri in `INotebookService`
-- [ ] Quaderno: elenco per materia + Articoli, lezione con nota (salvataggio automatico), colore della copertina, segnalibri, regole su lezioni ritirate e premium scaduto (§14) → `INotebookService`
-- [ ] Registro di studio: ricevere i tratti di lettura della teoria e i consigli aperti (§10.5) → `IStudyEventsService`
-- [ ] Progressi: struttura dei 5 gruppi (§10.5) — i dati arrivano con il Blocco 5 e la gamification → `IProgressQueryService`
+- [x] Quaderno: elenco per materia, lezione con nota (salvataggio automatico con versione), colore della copertina, segnalibri, regole su lezioni ritirate e premium scaduto (§14) → `INotebookService`, `/student/notebook/**` (21/11/2026). La linguetta "Articoli" arriva con il Blog
+- [x] Registro di studio: ricevere i tratti di lettura della teoria e i consigli aperti (§10.5) → `IStudyEventsService`, `POST /student/study-events` (21/11/2026). Tempo di studio mostrato allo studente: dopo l'MVP
+- [x] Progressi: i 5 gruppi (§10.5) con dettaglio del tentativo e voto al mezzo punto → `IProgressQueryService`, `/student/progress/**` (21/11/2026)
+- [x] Correzione visibile allo studente: nel dettaglio del tentativo (Progressi) e riaprendo la missione (`MissionPlayDTO.teacherReview`, Svolgimento §4.3) (21/11/2026)
 
 **Nota del 17/11/2026:** le voci spuntate qui sopra sono state scritte nel branch `feature/gamification-development`, insieme alla gamification (livelli, lucchetto della difficoltà, vite, sfida del giorno, ricompense). Restano Quaderno, registro di studio e Progressi. Nella voce Risorse i segnalibri si leggono già; salvarli e toglierli arriva con il Quaderno.
 

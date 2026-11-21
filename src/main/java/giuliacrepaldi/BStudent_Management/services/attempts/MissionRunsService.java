@@ -11,6 +11,7 @@ import giuliacrepaldi.BStudent_Management.entities.catalog.Mission;
 import giuliacrepaldi.BStudent_Management.entities.catalog.MissionStep;
 import giuliacrepaldi.BStudent_Management.entities.exercises.MissionExercise;
 import giuliacrepaldi.BStudent_Management.entities.exercises.QuestionVersion;
+import giuliacrepaldi.BStudent_Management.enums.attempts.AssessmentMethod;
 import giuliacrepaldi.BStudent_Management.enums.attempts.ExerciseAttemptStatus;
 import giuliacrepaldi.BStudent_Management.enums.attempts.ExerciseContext;
 import giuliacrepaldi.BStudent_Management.enums.attempts.FailureReason;
@@ -616,7 +617,18 @@ public class MissionRunsService implements IMissionRunsService {
                 run.getSubject().getSubjectName(), attempt.getStatus(), attempt.getFailureReason(),
                 studentMissionsService.stepper(snapshot.steps(), snapshot.readLessons(), snapshot.passedExercises()),
                 finished || snapshot.position().complete() ? null : snapshot.position().currentIndex() + 1,
-                lesson, exercise, livesService.getLives(studentId), hintsService.getCharges(studentId));
+                lesson, exercise, livesService.getLives(studentId), hintsService.getCharges(studentId),
+                teacherReview(attempt));
+    }
+
+    // Esito dell'ultimo esercizio corretto dalla docente in questo tentativo: lo studente lo vede riaprendo la
+    // missione (Blueprint Svolgimento §4.3). La soluzione segue le regole dello svolgimento (§3)
+    private ExerciseOutcomeDTO teacherReview(MissionAttempt attempt) {
+        return assessmentsRepository
+                .findFirstByExerciseAttempt_MissionAttempt_MissionAttemptIdAndAssessmentMethodOrderByValidatedAtDesc(
+                        attempt.getMissionAttemptId(), AssessmentMethod.teacher)
+                .map(assessment -> assessmentsService.toOutcome(assessment.getExerciseAttempt(), assessment))
+                .orElse(null);
     }
 
     private MissionExercisePlayDTO toExercise(ExerciseAttempt open) {

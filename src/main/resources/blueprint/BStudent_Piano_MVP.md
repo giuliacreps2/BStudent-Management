@@ -1,12 +1,21 @@
 # BStudent — Piano dell'MVP: cosa manca e con quale modello
 
-Aggiornato il 18/11/2026 (prima versione: 16/11/2026). Comprende tutto l'MVP, non solo questo branch. Il dettaglio
+Aggiornato il 21/11/2026 (prima versione: 16/11/2026). Comprende tutto l'MVP, non solo questo branch. Il dettaglio
 del Blocco 4 è in `BStudent_TODO_Blocco4.md`, con le caselle da spuntare.
 
 **Stato al 18/11/2026:** in due giorni di calendario (16–18/11) è stato fatto il backend di circa 18–26 giorni
 del piano: Admin di Palestra, test e Risorse, letture dello studente, gamification, svolgimento di Palestra e
 missioni, punti e progressi, consegne da correggere. **Restano circa 25–40 giorni pieni** (prima: 66–101). Il
 dettaglio è nel riepilogo in fondo.
+
+**Stato al 21/11/2026 (frontend, branch `feature/mission-play`):** collegate al backend le Risorse (spostate
+nell'area riservata, dentro Esercizi), la Palestra (skill, voci per skill e per argomento, obiettivo di oggi,
+esercizio con bozza, consegna e "Annulla invio"), la **missione in corso** (lezione a pagine, video, esercizio con
+tempo, vite, aiuto del cappello, esito, pausa, abbandono, "Ripassa"), i corsi (test di livello, "Continua la
+missione"), la pagina del corso, la mappa, la pagina della missione (briefing, tutorial, "Inizia") e le
+**Consegne da correggere** nell'Admin. Inseriti nel DB di sviluppo dati d'esempio riconoscibili ("esempio"),
+con backup prima. Premi d'esempio (bonus, badge, "Elmo di Bronzo") lasciati com'erano: decisione in sospeso
+(Gamification §6.3–6.4), raccolti in `constants/rewardPlaceholders.ts`. Giulia prova UI e UX.
 
 ## Come si dividono i modelli
 
@@ -39,9 +48,9 @@ Fatto prima del piano: v0.9 applicata; Admin di materie, corsi, missioni, banco,
 | 4.2 | Voci della Palestra, test lato Admin, Risorse, utility `ContentBlocks`, entity mancanti | Pro | 2–3 | **fatto** (16/11) |
 | 4.3 | Form Admin esistenti con i campi nuovi (materie, corsi, missioni, banco, lezioni, skill) | Pro | 1–2 | da fare (frontend) |
 | 4.4 | Pagine Admin nuove: skill della materia, argomenti, Palestra, test, Risorse + **editor a blocchi** + caricamento delle immagini su Cloudinary tramite il backend | Pro | 3–4 | da fare (frontend; Cloudinary anche backend) |
-| 4.5 | Letture dello studente: `StudentVisibility` e i service di `services.student`, test lato studente, Quaderno, registro di studio, struttura di Progressi | Pro | 3–5 | **in gran parte fatto** (17/11). Restano: metodi del Quaderno, registro di studio, Progressi |
+| 4.5 | Letture dello studente: `StudentVisibility` e i service di `services.student`, test lato studente, Quaderno, registro di studio, struttura di Progressi | Pro | 3–5 | **fatto** (backend: letture 17/11; Quaderno, registro di studio, Progressi e correzione visibile allo studente 21/11). Restano le pagine nel frontend |
 | 4.6 | **Presentazione dei contenuti**: lettore della lezione (blocchi, pagine, "Ho finito di leggere", nota a lato), video YouTube e Vimeo con il play (fine del video = lezione nel Quaderno) | Pro | 2–3 | backend di "Ho finito di leggere" fatto (18/11); resta il frontend |
-| 4.7 | Frontend studente: 20 errori TypeScript, mock sostituiti con le chiamate vere, Risorse nell'area riservata, barra fissa, segnale di tempo attivo | Pro | 4–6 | da fare |
+| 4.7 | Frontend studente: 20 errori TypeScript, mock sostituiti con le chiamate vere, Risorse nell'area riservata, barra fissa, segnale di tempo attivo | Pro | 4–6 | **in gran parte fatto** (21/11): Risorse, Palestra, corsi, mappa, missione. Restano dashboard, barra fissa, personaggio, Quaderno, Progressi, segnale di tempo attivo e le pagine ancora vuote (`lessons/[id]`, `progress`, `rewards`, `settings`, `register`) |
 | 4.8 | Prova completa con uno studente `*@example.com` e correzioni | Pro | 1–2 | da fare |
 | | **Totale Blocco 4** | | **17–26** | |
 
@@ -56,9 +65,9 @@ Le decisioni sono in `BStudent_Blueprint_Svolgimento_v0.1.md`. Migrazioni v0.11 
 | 5.1 | Contratti: svolgimento di missioni e Palestra, timer, vite, checkpoint, "Annulla invio", correzione docente, punti (blueprint §7.2, §9, §10, §12) | Pro con te | 1–2 | **fatto** (17/11) |
 | 5.2 | Backend dello svolgimento: tentativi, salvataggi, timer dal server, superamento, checkpoint, perdita di vite | **Fable** | 5–7 | **fatto** (Palestra 17/11, missioni 18/11) |
 | 5.3 | Punti e progressi: contributi Palestra e missioni, record, media del corso, prima evoluzione | Pro | 2–3 | **fatto** (17–18/11) |
-| 5.4 | Frontend: **spazi per rispondere** (scelta multipla, completamento, traduzione di frase, versione, rielaborazione) e **missione in corso** (timer, vite, aiuto del cappello, esito) | **Fable** | 4–6 | da fare |
-| 5.5 | Correzione docente: coda delle consegne, percentuale e feedback, rubriche come guida. Nella beta corregge l'Admin; il ruolo docente separato è dopo la beta | Pro | 3–4 | **backend fatto** (18/11); resta la pagina nel frontend |
-| 5.6 | Dati veri in Palestra (stati, sfida giornaliera), Progressi e Quaderno ("Nuovo") | Pro | 1–2 | Palestra fatta; Progressi e Quaderno con la 4.5 |
+| 5.4 | Frontend: **spazi per rispondere** (scelta multipla, completamento, traduzione di frase, versione, rielaborazione) e **missione in corso** (timer, vite, aiuto del cappello, esito) | **Fable** | 4–6 | **fatto** (21/11), da provare nel browser; resta la rielaborazione (5.7) |
+| 5.5 | Correzione docente: coda delle consegne, percentuale e feedback, rubriche come guida. Nella beta corregge l'Admin; il ruolo docente separato è dopo la beta | Pro | 3–4 | **fatto** (backend 18/11, pagina Admin 21/11; commento e percentuale per lo studente nel backend 21/11). Resta da mostrarli nel frontend |
+| 5.6 | Dati veri in Palestra (stati, sfida giornaliera), Progressi e Quaderno ("Nuovo") | Pro | 1–2 | Palestra fatta (21/11); Progressi e Quaderno con la 4.5 |
 | 5.7 | **Rielaborazione beta senza AI** (aggiunta il 17/11/2026, Svolgimento §8): corregge Giulia; prima va progettato con lei come ridurre il carico | Pro con te | 2–3 | da fare |
 | | **Totale Blocco 5** | | **18–27** | |
 
@@ -68,7 +77,7 @@ Le decisioni sono in `BStudent_Blueprint_Svolgimento_v0.1.md`. Migrazioni v0.11 
 |---|---|---|---:|---|
 | G.1 | Decisioni con te: curva dei livelli, soglie delle evoluzioni, media tra materie, streak, bonus, ricompense del corso, sblocco dei personaggi | **Fable** con te | 1–2 | **fatto** (16/11): `BStudent_Blueprint_Gamification_v0.1.md` |
 | G.2 | Migrazione v0.10, XP, livelli skill, sblocco per livello, evoluzioni, accessori e cappello, vite, sfida giornaliera, tris, Serie, personaggi, dati per barra fissa e dashboard. Gli eventi dello svolgimento ora sono collegati (18/11) | **Fable** | 4–6 | **backend fatto** (16/11); restano le pagine dell'Admin e dello studente |
-| G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 | da fare (frontend) |
+| G.3 | Pagina del personaggio, dashboard, home "cosa faccio ora", dati veri nella barra fissa | **Fable** | 2–3 | da fare (frontend). Servono anche personaggi e accessori nel DB (oggi nessuno) e le loro pagine Admin |
 | | **Totale gamification** | | **7–11** | |
 
 ## 4. Blog (migrazione v0.13)
@@ -123,6 +132,20 @@ G.2, 5.1, 5.2, 5.3, backend della 5.5).
 | **Produzione e prova con i primi studenti** (P.5, P.7) | 6–9 | **6–9** | dipende da servizi esterni e da persone vere, non dal codice |
 | **Totale** | | **circa 25–40** | |
 
+### Stima del 21/11/2026
+
+Fatto il 21/11 nel frontend: 5.4, pagina delle consegne (5.5), Palestra (5.6) e gran parte della 4.7.
+**Restano circa 20–30 giorni** di lavoro sul codice, più i tempi esterni:
+
+- backend: rielaborazione beta, Cloudinary, Stripe, account e GDPR, Blog (Quaderno, registro di studio,
+  Progressi e correzione visibile allo studente fatti il 21/11, sera);
+- frontend: dashboard e barra fissa, personaggio, Quaderno, Progressi, lettore delle lezioni a blocchi, test di
+  orientamento della Palestra, Admin (4.3, 4.4, personaggi e accessori), acquisto, testi, grafica immersiva;
+- produzione e prova con i primi studenti.
+
+**TODO nato il 21/11:** pagina Admin con il tempo realmente usato per ogni esercizio (tempo concesso meno tempo
+rimasto alla consegna), per fissare tempi realistici. La regola del tempo scaduto resta quella del blueprint.
+
 Due avvertenze:
 
 - **I bug verranno fuori con il frontend.** Lo svolgimento è coperto dai test ma non è ancora stato provato
@@ -141,6 +164,8 @@ Due avvertenze:
 | dopo il Blocco 5 | motore degli errori: concetto = argomento? (`BStudent_Blueprint_Motore_Errori_v0.1.md`) |
 | da rivedere | correzione già data: resta definitiva o si può correggere un errore? (Svolgimento §4.3) |
 | quando serve | corso già completato e missione nuova pubblicata: mostrare comunque "completato"? (Svolgimento §11, TODO) |
+| in sospeso (21/11) | premi: bonus del personaggio, badge, ricompensa misteriosa, "Elmo di Bronzo" (Gamification §6.3–6.4) |
+| prima della grafica | domande aperte del 21/11: dove lo studente legge la correzione, consegna in correzione in Palestra, testi della sfida del giorno |
 
 ## Fuori dall'MVP
 

@@ -35,6 +35,9 @@ public class Student {
     // Tutorial della prima volta (missioni, vite, tempo, cappello): mostrato una volta sola (v0.9, §5.9)
     private OffsetDateTime tutorialSeenAt;
 
+    // Colore della copertina del Quaderno: chiave della tavolozza del frontend, null = predefinito (v0.9, §14)
+    private String notebookCoverColor;
+
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id")
