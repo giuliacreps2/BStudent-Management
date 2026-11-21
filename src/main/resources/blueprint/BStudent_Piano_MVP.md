@@ -143,6 +143,13 @@ Fatto il 21/11 nel frontend: 5.4, pagina delle consegne (5.5), Palestra (5.6) e 
   orientamento della Palestra, Admin (4.3, 4.4, personaggi e accessori), acquisto, testi, grafica immersiva;
 - produzione e prova con i primi studenti.
 
+**Aggiornamento del 21/11, notte:** fatte anche le pagine del **Quaderno** (linguette per materia, copertina a
+scelta, segnalibri, lezione con nota salvata in automatico), di **"I miei progressi"** (i 5 gruppi, dettaglio del
+tentativo con il commento della docente) e il **tempo di studio**, portato nell'MVP (backend
+`GET /student/progress/study-time` e scheda in Progressi, tono neutro). Il segnale di lettura parte da lezioni
+(missione e Quaderno) e Risorse; "Salva nel Quaderno" delle Risorse salva il segnalibro; la missione riaperta
+mostra il commento della docente. La linguetta "Articoli" resta con il Blog (serve la migrazione v0.13).
+
 **TODO nato il 21/11:** pagina Admin con il tempo realmente usato per ogni esercizio (tempo concesso meno tempo
 rimasto alla consegna), per fissare tempi realistici. La regola del tempo scaduto resta quella del blueprint.
 

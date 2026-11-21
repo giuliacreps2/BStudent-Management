@@ -5,6 +5,7 @@ import giuliacrepaldi.BStudent_Management.enums.progression.StudyEventKind;
 import giuliacrepaldi.BStudent_Management.exceptions.BadRequestException;
 import giuliacrepaldi.BStudent_Management.payloads.gamification.StudentAccessoryDTO;
 import giuliacrepaldi.BStudent_Management.payloads.progression.StudyEventDTO;
+import giuliacrepaldi.BStudent_Management.payloads.progression.StudyTimeDTO;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -43,6 +44,20 @@ class ProgressAndStudyRulesTest {
                 accessory(5, AccessoryStatus.locked, "100", "50")));
 
         assertThat(near).extracting(StudentAccessoryDTO::accessoryId).containsExactly(4L, 3L, 5L);
+    }
+
+    @Test
+    void ilTempoDiStudioSommaTeoriaEdEserciziEFaLaMediaSuiGiorniDiAttivita() {
+        StudyTimeDTO time = StudyEventsService.summarize(7, List.of(
+                new StudyTimeDTO.Day("2026-11-20", 10, 20),
+                new StudyTimeDTO.Day("2026-11-21", 5, 0)));
+
+        assertThat(time.totalMinutes()).isEqualTo(35);
+        assertThat(time.theoryMinutes()).isEqualTo(15);
+        assertThat(time.exerciseMinutes()).isEqualTo(20);
+        assertThat(time.activeDays()).isEqualTo(2);
+        assertThat(time.averageMinutesPerActiveDay()).isEqualTo(18);
+        assertThat(StudyEventsService.summarize(7, List.of()).averageMinutesPerActiveDay()).isZero();
     }
 
     private static StudyEventDTO reading(OffsetDateTime startedAt, Long activeMs) {

@@ -7,7 +7,9 @@ import giuliacrepaldi.BStudent_Management.payloads.progression.ProgressDTOs.Cour
 import giuliacrepaldi.BStudent_Management.payloads.progression.ProgressDTOs.GrowthDTO;
 import giuliacrepaldi.BStudent_Management.payloads.progression.ProgressDTOs.PracticeProgressDTO;
 import giuliacrepaldi.BStudent_Management.payloads.progression.ProgressDTOs.WeakPointsDTO;
+import giuliacrepaldi.BStudent_Management.payloads.progression.StudyTimeDTO;
 import giuliacrepaldi.BStudent_Management.security.CurrentStudent;
+import giuliacrepaldi.BStudent_Management.services.progression.interfaces.IStudyEventsService;
 import giuliacrepaldi.BStudent_Management.services.progression.interfaces.IProgressQueryService;
 import giuliacrepaldi.BStudent_Management.services.progression.interfaces.IProgressQueryService.HistoryContext;
 import giuliacrepaldi.BStudent_Management.services.progression.interfaces.IProgressQueryService.HistoryOutcome;
@@ -25,10 +27,13 @@ public class StudentProgressController {
 
     private final CurrentStudent currentStudent;
     private final IProgressQueryService progressService;
+    private final IStudyEventsService studyEventsService;
 
-    public StudentProgressController(CurrentStudent currentStudent, IProgressQueryService progressService) {
+    public StudentProgressController(CurrentStudent currentStudent, IProgressQueryService progressService,
+                                     IStudyEventsService studyEventsService) {
         this.currentStudent = currentStudent;
         this.progressService = progressService;
+        this.studyEventsService = studyEventsService;
     }
 
     @GetMapping("/growth")
@@ -63,6 +68,12 @@ public class StudentProgressController {
     @GetMapping("/attempts/{exerciseAttemptId}")
     public AttemptDetailDTO attempt(@AuthenticationPrincipal User user, @PathVariable long exerciseAttemptId) {
         return progressService.getAttempt(currentStudent.idOf(user), exerciseAttemptId);
+    }
+
+    // Tempo di studio degli ultimi giorni (7 di default, al massimo 90): tono neutro, nessun obiettivo
+    @GetMapping("/study-time")
+    public StudyTimeDTO studyTime(@AuthenticationPrincipal User user, @RequestParam(defaultValue = "7") int days) {
+        return studyEventsService.getStudyTime(currentStudent.idOf(user), days);
     }
 
     @GetMapping("/weak-points")
